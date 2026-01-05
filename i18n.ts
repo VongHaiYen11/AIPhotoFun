@@ -45,6 +45,7 @@ const resources = {
       goBack: 'Go Back',
       startOver: 'Start Over',
       download: 'Download',
+      downloadAll: 'Download All',
       regenerate: 'Regenerate',
       retry: 'Retry',
       nextStep: 'Next Step',
@@ -52,7 +53,9 @@ const resources = {
       result: 'Result',
       original: 'Original',
       refineLabel: 'Refine or Regenerate',
-      refinePlaceholder: 'Optional: Add instructions to refine the result (e.g., "make the smile bigger", "change the shirt color to red").'
+      refineWarning: 'Refinements will be applied to all images (if any).',
+      refinePlaceholder: 'Optional: Add instructions to refine the result (be specific!).',
+      addImage: 'Add Image'
     },
     mediaLibrary: {
       title: 'Media Library',
@@ -142,6 +145,13 @@ const resources = {
         'Fashion & Editorial': 'Fashion & Editorial',
         'Themed, Sitting & Lying Poses': 'Themed, Sitting & Lying Poses',
         'Dynamic & Candid': 'Dynamic & Candid',
+      },
+      imageSize: {
+        "1_1": "1:1",
+        "9_16": "9:16",
+        "16_9": "16:9",
+        "4_3": "4:3",
+        "3_4": "3:4"
       },
       poses: {
         smiling_portrait: 'Smiling Portrait',
@@ -332,6 +342,13 @@ const resources = {
       generationFailed: 'Generation Failed',
       dropImage: 'Drop image here',
       clickToUpload: 'or click to upload',
+      numberOfPhotos: {
+        photos_4: '4 Photos',
+        photos_6: '6 Photos',
+        photos_8: '8 Photos',
+        photos_9: '9 Photos',
+        photos_12: '12 Photos',
+      },
     },
     cloneEffect: {
       subtitle: 'Magically duplicate people in your photos.',
@@ -425,7 +442,7 @@ const resources = {
       colorwayGeneratorDesc: 'Generate mockups for multiple apparel colors. Add hex codes below.',
       hexPlaceholder: '#FFFFFF',
       add: 'Add',
-      generateColorways: 'Generate {0} Colorways',
+      generateColorways: 'Generate {{count}} Colorways',
       apparelDetails: 'Apparel Details',
       apparelStyle: 'Apparel Style Description',
       apparelStylePlaceholder: 'Standard cotton t-shirt',
@@ -496,6 +513,7 @@ const resources = {
       goBack: 'Quay lại',
       startOver: 'Làm lại từ đầu',
       download: 'Tải xuống',
+      downloadAll: 'Tải tất cả',
       regenerate: 'Tạo lại',
       retry: 'Thử lại',
       nextStep: 'Bước tiếp theo',
@@ -503,7 +521,9 @@ const resources = {
       result: 'Kết quả',
       original: 'Gốc',
       refineLabel: 'Tinh chỉnh hoặc Tạo lại',
-      refinePlaceholder: 'Tùy chọn: Thêm hướng dẫn để tinh chỉnh kết quả (ví dụ: "làm cho nụ cười lớn hơn", "đổi màu áo thành màu đỏ").'
+      refineWarning: 'Việc tinh chỉnh sẽ được áp dụng lên tất cả ảnh (nếu có).',
+      refinePlaceholder: 'Tùy chọn: Thêm hướng dẫn để tinh chỉnh kết quả (đưa ra các yêu cầu cụ thể!).',
+      addImage: 'Thêm ảnh'
     },
     mediaLibrary: {
       title: 'Thư viện Media',
@@ -783,6 +803,13 @@ const resources = {
       generationFailed: 'Tạo ảnh thất bại',
       dropImage: 'Thả ảnh vào đây',
       clickToUpload: 'hoặc nhấp để tải lên',
+      numberOfPhotos: {
+        photos_4: '4 Ảnh',
+        photos_6: '6 Ảnh',
+        photos_8: '8 Ảnh',
+        photos_9: '9 Ảnh',
+        photos_12: '12 Ảnh',
+      },
     },
     cloneEffect: {
       subtitle: 'Nhân bản người trong ảnh của bạn một cách kỳ diệu.',
@@ -926,7 +953,7 @@ const resources = {
       colorwayGeneratorDesc: 'Tạo mockup cho nhiều màu trang phục. Thêm mã hex bên dưới.',
       hexPlaceholder: '#FFFFFF',
       add: 'Thêm',
-      generateColorways: 'Tạo {0} Phối màu',
+      generateColorways: 'Tạo {{count}} Phối màu',
       apparelDetails: 'Chi tiết Trang phục',
       apparelStyle: 'Mô tả Kiểu dáng',
       apparelStylePlaceholder: 'Áo thun cotton tiêu chuẩn',
