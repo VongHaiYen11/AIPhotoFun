@@ -1,50 +1,43 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { BackToTools } from '../ui/BackToTools';
-import { GoBackTools } from '../ui/GoBackTools';
-import { LanguageSwitcher } from '../ui/LanguageSwitcher';
-import { ImageUpload } from '../ui/ImageUpload';
-import { StepAccordion } from '../ui/StepAccordion';
-import { SideImageLoader } from '../ui/SideImageLoader';
-import { SingleSelectList } from '../ui/SingleSelectList';
-import { MultiSelectList } from '../ui/MultiSelectList';
-import { PolaroidCard } from '../ui/PolaroidCard';
+import { BackToTools } from '../../components/ui/BackToTools';
+import { GoBackTools } from '../../components/ui/GoBackTools';
+import { LanguageSwitcher } from '../../components/ui/LanguageSwitcher';
+import { ImageUpload } from '../../components/ui/ImageUpload';
+import { StepAccordion } from '../../components/ui/StepAccordion';
+import { SideImageLoader } from '../../components/ui/SideImageLoader';
+import { SingleSelectList } from '../../components/ui/SingleSelectList';
+import { MultiSelectList } from '../../components/ui/MultiSelectList';
+import { PolaroidCard } from '../../components/ui/PolaroidCard';
 import { useNavigate } from 'react-router-dom';
-import { RefinePanel } from '../ui/RefinePanel';
-import { X } from 'lucide-react';
+import { RefinePanel } from '../../components/ui/RefinePanel';
+import { X, Loader2 } from 'lucide-react';
+import { usePhotoshoot } from './usePhotoshoot';
+import { generateImageFromPrompt, generateStyledImage } from '../../services/geminiServices';
 
 export const Photoshoot: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-
-  const [status, setStatus] = useState<boolean>(true) // true = input, false = result
-
-  // Ảnh đang thao tác
-  const [currentImage, setCurrentImage] = useState<string | undefined>();
-
-  const [AIDesignerPrompt, setAIDesignerPrompt] = useState<string>('');
-
-  // Thư viện ảnh
-  const [modelLibrary, setModelLibrary] = useState<string[]>([]);
-
-  // Mode
-  const [mode, setMode] = useState<'Upload' | 'Generate'>('Upload');
-
-  const [openStep, setOpenStep] = useState<number | null>(2);
-
-  const toggleStep = (step: number) => {
-    setOpenStep((prev) => (prev === step ? null : step));
-  };
-
-  // STEP 2 – Assets
-  const [outfitImage, setOutfitImage] = useState<string | undefined>();
-  const [objectImage, setObjectImage] = useState<string | undefined>();
-  const [backgroundImage, setBackgroundImage] = useState<string | undefined>();
-
-  const [selectedCameraAngle, setSelectedCameraAngle] = useState<string | null>('angles.eyeLevel');
-  const [selectedColorGrade, setSelectedColorGrade] = useState<string | null>('grades.none');
-  const [selectedSize, setSelectedSize] = useState<string | null>('imageSize.1_1');
+  const {
+    status, setStatus,
+    currentImage, setCurrentImage,
+    AIDesignerPrompt, setAIDesignerPrompt,
+    modelLibrary, setModelLibrary,
+    mode, setMode,
+    openStep, toggleStep,
+    outfitImage, setOutfitImage,
+    objectImage, setObjectImage,
+    backgroundImage, setBackgroundImage,
+    selectedCameraAngle, setSelectedCameraAngle,
+    selectedColorGrade, setSelectedColorGrade,
+    selectedSize, setSelectedSize,
+    selectedPoses, setSelectedPoses,
+    refineText, setRefineText,
+    isGeneratingModel, setIsGeneratingModel,
+    isGeneratingPhotos, setIsGeneratingPhotos,
+    generatedResults, setGeneratedResults
+  } = usePhotoshoot();
 
   const cameraAngle = ['eyeLevel', 'lowAngle', 'highAngle', 'dutchAngle', 'wormsEyeView', 'birdsEyeView']
   const prefixedAngles = cameraAngle.map(angle => `angles.${angle}`);
@@ -54,10 +47,6 @@ export const Photoshoot: React.FC = () => {
 
   const imageSize = ['1_1', '9_16', '16_9', '4_3', '3_4']
   const prefixedImageSize = imageSize.map(sz => `imageSize.${sz}`)
-
-  const [selectedPoses, setSelectedPoses] = useState<string[]>([]);
-
-  const [refineText, setRefineText] = useState('');
 
   const poses = [
     'smiling_portrait',
@@ -121,7 +110,7 @@ export const Photoshoot: React.FC = () => {
     // General
     setStatus(true);
     setMode('Upload');
-    setOpenStep(2);
+    toggleStep(2);
 
     // Images
     setCurrentImage(undefined);
@@ -140,9 +129,84 @@ export const Photoshoot: React.FC = () => {
 
     // Refine
     setRefineText('');
-    setAIDesignerPrompt('')
+    setAIDesignerPrompt('');
+    setGeneratedResults([]);
+    setIsGeneratingModel(false);
+    setIsGeneratingPhotos(false);
   };
 
+  const handleGenerateModel = async () => {
+    if (!AIDesignerPrompt.trim()) return;
+    
+    setIsGeneratingModel(true);
+    try {
+      const url = await generateImageFromPrompt(AIDesignerPrompt);
+      setCurrentImage(url);
+      setModelLibrary(prev => [...prev, url]);
+      setMode('Upload'); // Switch back to see the image in the main uploader
+    } catch (error) {
+      console.error("Failed to generate model:", error);
+      alert("Failed to generate model. Please try again.");
+    } finally {
+      setIsGeneratingModel(false);
+    }
+  };
+
+  const handleGeneratePhotos = async () => {
+    if (!currentImage || selectedPoses.length === 0) return;
+
+    setStatus(false); // Switch to result view
+    setIsGeneratingPhotos(true);
+    setGeneratedResults([]);
+
+    const imageInputs = [currentImage];
+    let promptInstruction = "The first image is the reference person/model. Maintain their identity.";
+
+    // Append auxiliary images and update instructions
+    if (outfitImage) {
+      imageInputs.push(outfitImage);
+      promptInstruction += `\nThe second image is the outfit. The person MUST wear this outfit.`;
+    }
+    if (objectImage) {
+      imageInputs.push(objectImage);
+      promptInstruction += `\nThe ${outfitImage ? 'third' : 'second'} image is an object. The person should interact with it or hold it.`;
+    }
+    if (backgroundImage) {
+      imageInputs.push(backgroundImage);
+      promptInstruction += `\nThe ${[outfitImage, objectImage].filter(Boolean).length + 2}th image is the background. Place the person in this scene.`;
+    }
+
+    // Process poses
+    for (const poseKey of selectedPoses) {
+      const poseName = t(poseKey); // e.g. "Smiling Portrait"
+      const angleName = t(selectedCameraAngle || '');
+      const gradeName = t(selectedColorGrade || '');
+      const sizeName = t(selectedSize || '');
+
+      const fullPrompt = `
+        Create a photorealistic photo based on the following:
+        - Pose: ${poseName}
+        - Camera Angle: ${angleName}
+        - Color Grading Style: ${gradeName}
+        - Aspect Ratio/Format: ${sizeName}
+        
+        ${promptInstruction}
+      `;
+
+      try {
+        const url = await generateStyledImage(fullPrompt, imageInputs);
+        setGeneratedResults(prev => [...prev, {
+          id: crypto.randomUUID(),
+          url,
+          pose: poseName
+        }]);
+      } catch (error) {
+        console.error(`Failed to generate pose ${poseName}:`, error);
+      }
+    }
+    
+    setIsGeneratingPhotos(false);
+  };
 
   return (
     <div className="w-full max-w-7xl px-6 md:px-12 py-12 flex flex-col items-center text-white">
@@ -154,7 +218,7 @@ export const Photoshoot: React.FC = () => {
           <GoBackTools
             onClick={() => {
               setStatus(true); // quay lại màn input
-              resetAll();      // reset các state khác
+              // resetAll();      // reset các state khác -- user probably wants to keep settings
             }}
           />
         )}
@@ -242,10 +306,22 @@ export const Photoshoot: React.FC = () => {
                               text-white placeholder-white/40 resize-none
                               focus:outline-none focus:border-white"
                     placeholder={t('photoshoot.modelGenPlaceholder')}
+                    disabled={isGeneratingModel}
                   />
 
-                  <button className="w-full px-6 py-3 rounded-xl bg-white text-black font-semibold hover:bg-white/90">
-                    {t('photoshoot.generateModel')}
+                  <button 
+                    onClick={handleGenerateModel}
+                    disabled={isGeneratingModel || !AIDesignerPrompt.trim()}
+                    className="w-full px-6 py-3 rounded-xl bg-white text-black font-semibold hover:bg-white/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {isGeneratingModel ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        {t('photoshoot.generatingModel')}
+                      </>
+                    ) : (
+                      t('photoshoot.generateModel')
+                    )}
                   </button>
                 </div>
               )}
@@ -262,7 +338,7 @@ export const Photoshoot: React.FC = () => {
                         <button
                           key={index}
                           onClick={() => setCurrentImage(img)}
-                          className="
+                          className={`
                             relative
                             w-16 h-16
                             rounded-lg
@@ -271,7 +347,8 @@ export const Photoshoot: React.FC = () => {
                             hover:border-white/40
                             transition
                             group
-                          "
+                            ${currentImage === img ? 'ring-2 ring-indigo-500' : ''}
+                          `}
                         >
                           <img
                             src={img}
@@ -405,7 +482,7 @@ export const Photoshoot: React.FC = () => {
                       {/* CAMERA ANGLE */}
                       <SingleSelectList
                         feature="photoshoot"
-                        keys={prefixedAngles}           // ['eyeLevel', 'lowAngle', ...]
+                        keys={prefixedAngles}           // ['eyeLevel', 'lowAngle', components.]
                         value={selectedCameraAngle}
                         onChange={(key) => setSelectedCameraAngle(key)}
                         categories='cameraAngle'
@@ -414,7 +491,7 @@ export const Photoshoot: React.FC = () => {
                       {/* COLOR GRADE */}
                       <SingleSelectList
                         feature="photoshoot"
-                        keys={prefixedColorGrade}            // ['none', 'cinematic', ...]
+                        keys={prefixedColorGrade}            // ['none', 'cinematic', components.]
                         value={selectedColorGrade}
                         onChange={(key) => setSelectedColorGrade(key)}
                         categories='colorGrade'
@@ -537,7 +614,7 @@ export const Photoshoot: React.FC = () => {
                     disabled:cursor-not-allowed
                   "
                   disabled={selectedPoses.length === 0}
-                  onClick={() => setStatus(false)}
+                  onClick={handleGeneratePhotos}
                 >
                   {`${t(`photoshoot.generateButton`)} (${selectedPoses.length})`}
                 </button>
@@ -546,12 +623,39 @@ export const Photoshoot: React.FC = () => {
             </div>
           </div> :
 
-          <div className="flex flex-col gap-6 items-center">
-            <PolaroidCard
-              imageUrl={currentImage}
-              name="Portrait"
-              width={280}
-            />
+          <div className="flex flex-col gap-6 items-center w-full">
+            {/* GRID OF RESULTS */}
+            {generatedResults.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-6xl">
+                {generatedResults.map((result) => (
+                   <PolaroidCard
+                    key={result.id}
+                    imageUrl={result.url}
+                    name={result.pose}
+                  />
+                ))}
+                {isGeneratingPhotos && (
+                   <div className="flex flex-col items-center justify-center p-12 bg-white/5 border border-white/10 rounded-2xl animate-pulse">
+                      <Loader2 className="w-10 h-10 text-indigo-400 animate-spin mb-4" />
+                      <span className="text-white/60 font-semibold">{t('photoshoot.generatingButton')}</span>
+                      <span className="text-white/40 text-sm mt-2">Processing remaining poses...</span>
+                   </div>
+                )}
+              </div>
+            ) : (
+               <div className="flex flex-col items-center justify-center py-20">
+                  {isGeneratingPhotos ? (
+                    <>
+                      <Loader2 className="w-16 h-16 text-indigo-400 animate-spin mb-6" />
+                      <h2 className="text-2xl font-bold">{t('photoshoot.generatingButton')}</h2>
+                      <p className="text-white/50 mt-2">Generating your photos, this might take a moment...</p>
+                    </>
+                  ) : (
+                    <p className="text-white/50">No images generated.</p>
+                  )}
+               </div>
+            )}
+
 
             <RefinePanel
               value={refineText}
@@ -559,11 +663,11 @@ export const Photoshoot: React.FC = () => {
               onChange={setRefineText}
               onApplyAll={() => {
                 console.log('Apply instruction:', refineText);
-                // gọi API regenerate ở đây
+                // Future: Implement refinement logic
               }}
             />
             <div className="flex items-center gap-4">
-              {/* Generate Photos */}
+              {/* Download All (Simulated) */}
               <button
                 className="
                   px-6 py-3
@@ -575,6 +679,7 @@ export const Photoshoot: React.FC = () => {
                   disabled:opacity-50
                   disabled:cursor-not-allowed
                 "
+                disabled={generatedResults.length === 0 || isGeneratingPhotos}
               >
                 {t(`photoshoot.downloadAllButton`)}
               </button>
@@ -591,6 +696,7 @@ export const Photoshoot: React.FC = () => {
                   hover:text-white
                 "
                 onClick={resetAll}
+                disabled={isGeneratingPhotos}
               >
                 {t('common.startOver')}
               </button>

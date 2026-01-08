@@ -1,44 +1,34 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { BackToTools } from '../ui/BackToTools';
-import { LanguageSwitcher } from '../ui/LanguageSwitcher';
-import { ImageUpload } from '../ui/ImageUpload';
-import { StepAccordion } from '../ui/StepAccordion';
-import { SideImageLoader } from '../ui/SideImageLoader';
-import { SingleSelectList } from '../ui/SingleSelectList';
-import { MultiSelectList } from '../ui/MultiSelectList';
-import { PolaroidCard } from '../ui/PolaroidCard';
-import { ImageResultHolder } from '../ui/ImageResultHolder';
+import { BackToTools } from '../../components/ui/BackToTools';
+import { LanguageSwitcher } from '../../components/ui/LanguageSwitcher';
+import { ImageUpload } from '../../components/ui/ImageUpload';
+import { SideImageLoader } from '../../components/ui/SideImageLoader';
+import { SingleSelectList } from '../../components/ui/SingleSelectList';
+import { ImageResultHolder } from '../../components/ui/ImageResultHolder';
 import { useNavigate } from 'react-router-dom';
-import { GoBackTools } from '../ui/GoBackTools';
-import { RefinePanel } from '../ui/RefinePanel';
-import { X } from 'lucide-react';
+import { GoBackTools } from '../../components/ui/GoBackTools';
+import { useApparelMockupStudio } from './useApparelMockupStudio';
 
 
 export const ApparelMockupStudio: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
-  const [status, setStatus] = useState<boolean>(true) // true = input, false = result
-
-  const [AIDesignerPrompt, setAIDesignerPrompt] = useState<string>('');
-  const [styleDescPrompt, setStyleDescPrompt] = useState<string>('');
-
-  // Ảnh đang thao tác
-  const [currentImage, setCurrentImage] = useState<string | undefined>();
-
-  const [uploadedMockup, setuploadedMockup] = useState<string | undefined>();
-
-  const [selectedMockup, setSelectedMockup] = useState<string | null>('hanging');
+  const {
+    status, setStatus,
+    currentImage, setCurrentImage,
+    AIDesignerPrompt, setAIDesignerPrompt,
+    styleDescPrompt, setStyleDescPrompt,
+    mode, setMode,
+    uploadedMockup, setuploadedMockup,
+    selectedMockup, setSelectedMockup,
+    hexInput, setHexInput,
+    colorways, setColorways
+  } = useApparelMockupStudio();
 
   const mockupStyle = ['hanging', 'flatLay', 'folded']
-
-  // Mode
-  const [mode, setMode] = useState<'Upload' | 'Generate'>('Generate');
-
-  const [hexInput, setHexInput] = useState('#FFFFFF');
-  const [colorways, setColorways] = useState<string[]>(['#FFFFFF', '#18181b']);
 
   const isValidHex = (hex: string) =>
   /^#([0-9A-Fa-f]{6})$/.test(hex);

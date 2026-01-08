@@ -1,22 +1,22 @@
 import React from 'react';
 import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import { MainLayout } from './layouts/MainLayout';
-import { Hero } from './components/sections/Hero';
-import { Docs } from './components/sections/Docs';
-import { Photoshoot } from './components/sections/Photoshoot';
-import { ProductSceneGenerator } from './components/sections/ProductSceneGenerator'
-import { ApparelMockupStudio } from './components/sections/ApparelMockupStudio'
-import { TypographicIllustrator } from './components/sections/TypographicIllustrator'
-import { PhotoBooth } from './components/sections/PhotoBooth'
-import { CloneEffect } from './components/sections/CloneEffect'
-import { OutfitExtractor } from './components/sections/OutfitExtractor'
+import { Home } from './pages/Home/index';
+import { Photoshoot } from './pages/Photoshoot/index';
+import { ProductSceneGenerator } from './pages/ProductSceneGenerator/index';
+import { ApparelMockupStudio } from './pages/ApparelMockupStudio/index';
+import { TypographicIllustrator } from './pages/TypographicIllustrator/index';
+import { PhotoBooth } from './pages/PhotoBooth/index';
+import { CloneEffect } from './pages/CloneEffect/index';
+import { OutfitExtractor } from './pages/OutfitExtractor/index';
 
 export const App: React.FC = () => {
   return (
+    // Removed 'future' prop as it is not supported in the current type definition of HashRouterProps
     <Router>
       <MainLayout>
         <Routes>
-          <Route path="/" element={<Hero />} />
+          <Route path="/" element={<Home />} />
           <Route path="/photoshoot" element={<Photoshoot />} />
           <Route path="/productSceneGenerator" element={<ProductSceneGenerator />} />
           <Route path="/apparelMockupStudio" element={<ApparelMockupStudio />} />

@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { BackToTools } from '../ui/BackToTools';
-import { LanguageSwitcher } from '../ui/LanguageSwitcher';
-import { GoBackTools } from '../ui/GoBackTools';
-import { ImageResultHolder } from '../ui/ImageResultHolder';
+import { BackToTools } from '../../components/ui/BackToTools';
+import { LanguageSwitcher } from '../../components/ui/LanguageSwitcher';
+import { GoBackTools } from '../../components/ui/GoBackTools';
 
 export const TypographicIllustrator: React.FC = () => {
   const { t } = useTranslation();

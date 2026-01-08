@@ -1,22 +1,16 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { BackToTools } from '../ui/BackToTools';
-import { GoBackTools } from '../ui/GoBackTools';
-import { LanguageSwitcher } from '../ui/LanguageSwitcher';
-import { ImageUpload } from '../ui/ImageUpload';
-import { StepAccordion } from '../ui/StepAccordion';
-import { SideImageLoader } from '../ui/SideImageLoader';
-import { SingleSelectList } from '../ui/SingleSelectList';
-import { MultiSelectList } from '../ui/MultiSelectList';
-import { PolaroidCard } from '../ui/PolaroidCard';
-import { ImageResultHolder } from '../ui/ImageResultHolder';
+import { BackToTools } from '../../components/ui/BackToTools';
+import { LanguageSwitcher } from '../../components/ui/LanguageSwitcher';
+import { ImageUpload } from '../../components/ui/ImageUpload';
+import { GoBackTools } from '../../components/ui/GoBackTools';
+import { SingleSelectList } from '../../components/ui/SingleSelectList';
+import { ImageResultHolder } from '../../components/ui/ImageResultHolder';
 import { useNavigate } from 'react-router-dom';
-import { RefinePanel } from '../ui/RefinePanel';
-import { X } from 'lucide-react';
 
 
-export const ProductSceneGenerator: React.FC = () => {
+export const PhotoBooth: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
@@ -25,10 +19,10 @@ export const ProductSceneGenerator: React.FC = () => {
   // Ảnh đang thao tác
   const [currentImage, setCurrentImage] = useState<string | undefined>();
 
-  const [selectedCameraAngle, setSelectedCameraAngle] = useState<string[]>([]);
+  const [selectedNumPhotos, setSelectedNumPhotos] = useState<string | undefined>();
 
-  const cameraAngle = ['front', 'back', 'side_left', 'side_right', 'top', 'bottom', 'three_quarter', 'close_up', 'in_context']
-  const prefixedAngles = cameraAngle.map(angle => `angles.${angle}`);
+  const numberOfPhotos = ['photos_4', 'photos_6', 'photos_8', 'photos_9', 'photos_12']
+  const prefixednumberOfPhotos = numberOfPhotos.map(sz => `numberOfPhotos.${sz}`)
 
 
   const resetAll = () => {
@@ -37,7 +31,7 @@ export const ProductSceneGenerator: React.FC = () => {
     // Images
     setCurrentImage(undefined);
     // Options
-    setSelectedCameraAngle([]);
+    setSelectedNumPhotos(undefined);
   };
 
 
@@ -66,45 +60,32 @@ export const ProductSceneGenerator: React.FC = () => {
         className="text-center mb-12"
       >
         <h1 className="text-5xl md:text-7xl font-black tracking-tighter mb-6">
-          {t('app.productSceneGeneratorTitle')}
+          {t('app.photoBoothTitle')}
         </h1>
 
         <p className="text-white/60 text-lg md:text-xl max-w-3xl mx-auto">
-          {t('productSceneGenerator.subtitle')}
+          {t('photoBooth.subtitle')}
         </p>
       </motion.div>
 
       {
         status ?  
-          <div className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* STEP 1 */}
             <div className="w-full md:col-span-1">
               <div className="bg-white/[0.04] backdrop-blur-xl border border-white/50 rounded-3xl p-8 mb-8">
                 <h2 className="text-xl font-bold mb-6 text-center">
-                  {t('productSceneGenerator.step1Title')}
+                  {t('photoBooth.uploadTitle')}
                 </h2>
 
                 <ImageUpload
                   value={currentImage}
-                  height="h-120"
+                  height="h-100"
                   onChange={(base64) => {
                     setCurrentImage(base64);
                   }}
                   onRemove={() => setCurrentImage(undefined)}
                 />
-                <div className="mt-6 flex flex-col gap-3">
-                  <textarea
-                    rows={3}
-                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/15
-                              text-white placeholder-white/40 resize-none
-                              focus:outline-none focus:border-white"
-                    placeholder={t('photoshoot.modelGenPlaceholder')}
-                  />
-
-                  <button className="w-full px-6 py-3 rounded-xl bg-white text-black font-semibold hover:bg-white/90">
-                    {t('photoshoot.generateModel')}
-                  </button>
-                </div>
               </div>
             </div>
 
@@ -120,43 +101,26 @@ export const ProductSceneGenerator: React.FC = () => {
               flex-col
               items-start
               w-full 
-              md:col-span-2
+              md:col-span-1
               ${!currentImage
               ? 'opacity-50 cursor-not-allowed pointer-events-none'
               : 'cursor-pointer'}
             `}>
                 <h2 className="text-xl font-bold mb-4 text-center">
-                  {t('productSceneGenerator.step2Title')}
+                  {t('photoBooth.optionsTitle')}
                 </h2>
-                <p className="text-sm text-white/50 mb-4">{t('productSceneGenerator.step2Desc')}</p>
-                <MultiSelectList
-                  feature="productSceneGenerator"
-                  keys={prefixedAngles}
-                  value={selectedCameraAngle}
-                  onChange={setSelectedCameraAngle}
+                <SingleSelectList
+                  feature="photoBooth"
+                  keys={prefixednumberOfPhotos}
+                  value={selectedNumPhotos}
+                  onChange={setSelectedNumPhotos}
+                  categories="photoCount"
                 />
-
-              <div className="flex w-full items-center justify-between">
-                {/* Start Over */}
-                <button
-                  className="
-                    px-6 py-3
-                    border border-white/20
-                    rounded-lg
-                    text-white/70
-                    font-semibold
-                    transition
-                    hover:bg-white/10
-                    hover:text-white
-                  "
-                  onClick={resetAll}
-                >
-                  {t('common.startOver')}
-                </button>
-
                 {/* Generate Photos */}
                 <button
                   className="
+                    mt-4
+                    w-full
                     px-6 py-3
                     bg-white text-black
                     rounded-lg
@@ -166,13 +130,11 @@ export const ProductSceneGenerator: React.FC = () => {
                     disabled:opacity-50
                     disabled:cursor-not-allowed
                   "
-                  disabled={selectedCameraAngle.length === 0}
+                  disabled={selectedNumPhotos === undefined}
                   onClick={() => setStatus(false)}
                 >
-                  {`${t(`photoshoot.generateButton`)} (${selectedCameraAngle.length})`}
+                  {t(`photoBooth.generateButton`)}
                 </button>
-              </div>
-
             </div>
           </div> :
 
@@ -180,13 +142,10 @@ export const ProductSceneGenerator: React.FC = () => {
             <div className="flex gap-6 content-start">
               <ImageResultHolder
                 imageUrl={currentImage}
-                name="Original"
-                width={360}
-              />
-              <ImageResultHolder
-                imageUrl={currentImage}
-                name="Original"
-                width={360}
+                name={t('photoBooth.resultTitle')}
+                width={360}           // optional, width của khung
+                showDownload={false}   // có hiện nút download
+                showRegenerate={false} // có hiện nút regenerate
               />
             </div>
 

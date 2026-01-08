@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { BackToTools } from '../ui/BackToTools';
-import { LanguageSwitcher } from '../ui/LanguageSwitcher';
-import { ImageUpload } from '../ui/ImageUpload';
-import { RefinePanel } from '../ui/RefinePanel';
-import { ImageResultHolder } from '../ui/ImageResultHolder';
-import { GoBackTools } from '../ui/GoBackTools';
+import { BackToTools } from '../../components/ui/BackToTools';
+import { LanguageSwitcher } from '../../components/ui/LanguageSwitcher';
+import { ImageUpload } from '../../components/ui/ImageUpload';
+import { RefinePanel } from '../../components/ui/RefinePanel';
+import { ImageResultHolder } from '../../components/ui/ImageResultHolder';
+import { GoBackTools } from '../../components/ui/GoBackTools';
 
 export const OutfitExtractor: React.FC = () => {
   const { t } = useTranslation();
