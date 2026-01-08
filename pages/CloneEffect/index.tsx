@@ -4,45 +4,62 @@ import { useTranslation } from 'react-i18next';
 import { BackToTools } from '../../components/ui/BackToTools';
 import { LanguageSwitcher } from '../../components/ui/LanguageSwitcher';
 import { ImageUpload } from '../../components/ui/ImageUpload';
-import { RefinePanel } from '../../components/ui/RefinePanel';
-import { ImageResultHolder } from '../../components/ui/ImageResultHolder';
 import { GoBackTools } from '../../components/ui/GoBackTools';
+import { generateCloneEffectImage } from '../../services/geminiServices';
+import { Loader2, Download, RefreshCcw } from 'lucide-react';
 
 export const CloneEffect: React.FC = () => {
   const { t } = useTranslation();
 
-  // true = upload step, false = result step
-  const [status, setStatus] = useState<boolean>(true);
-
-  // Lưu ảnh dưới dạng base64
-  const [imageBase64, setImageBase64] = useState<string>('');
-
-  // Loading state khi upload
-  const [isLoading, setIsLoading] = useState(false);
-
+  // State
+  const [originalImage, setOriginalImage] = useState<string | undefined>();
+  const [generatedImage, setGeneratedImage] = useState<string | undefined>();
+  const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [refineText, setRefineText] = useState('');
 
   // Reset
   const resetAll = () => {
-    setStatus(true);
-    setImageBase64('');
-    setIsLoading(false);
+    setOriginalImage(undefined);
+    setGeneratedImage(undefined);
+    setIsGenerating(false);
     setRefineText('');
+  };
+
+  const handleGenerate = async () => {
+    if (!originalImage) return;
+
+    setIsGenerating(true);
+    setGeneratedImage(undefined);
+
+    try {
+      const url = await generateCloneEffectImage(originalImage, refineText);
+      setGeneratedImage(url);
+    } catch (error) {
+      console.error("Clone generation failed:", error);
+      alert(t('cloneEffect.generationFailed'));
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleDownload = () => {
+    if (!generatedImage) return;
+    const link = document.createElement('a');
+    link.href = generatedImage;
+    link.download = `clone-effect-${Date.now()}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
     <div className="w-full max-w-7xl px-6 md:px-12 py-12 flex flex-col items-center text-white">
       {/* Top bar */}
       <div className="w-full flex justify-between mb-8">
-        {status ? (
+        {!originalImage ? (
           <BackToTools />
         ) : (
-          <GoBackTools
-            onClick={() => {
-              setStatus(true); // quay lại màn input
-              resetAll();      // reset các state khác
-            }}
-          />
+          <GoBackTools onClick={resetAll} />
         )}
         <LanguageSwitcher />
       </div>
@@ -62,7 +79,7 @@ export const CloneEffect: React.FC = () => {
         </p>
       </motion.div>
 
-      {status ? (
+      {!originalImage ? (
         /* ================= UPLOAD STEP ================= */
         <div
           className="
@@ -87,75 +104,144 @@ export const CloneEffect: React.FC = () => {
           </p>
 
           <ImageUpload
-            value={imageBase64}
-            onChange={(base64) => {
-              setImageBase64(base64);
-              setStatus(false); // tự nhảy qua màn result khi có ảnh
-            }}
-            isLoading={isLoading}
+            value={originalImage}
+            onChange={setOriginalImage}
             label={t('cloneEffect.dropImage')}
             className="w-full h-96"
           />
         </div>
       ) : (
-        /* ================= RESULT STEP ================= */
-        <div className="w-full max-w-5xl flex flex-col gap-8 items-center">
-          {/* UPLOADED IMAGE */}
-          <ImageResultHolder
-            imageUrl={imageBase64}
-            name={t('cloneEffect.clonedImage')}
-            width={300}           // optional, width của khung
-            showDownload={false}   // có hiện nút download
-            showRegenerate={false} // có hiện nút regenerate
-          />
+        /* ================= SPLIT VIEW STEP ================= */
+        <div className="w-full flex flex-col items-center gap-8">
+          
+          {/* IMAGES ROW */}
+          <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl">
+            {/* LEFT: ORIGINAL */}
+            <div className="bg-white/[0.02] border border-white/10 rounded-2xl p-6 flex flex-col h-full">
+               <h3 className="text-lg font-bold mb-4 text-white/90">{t('cloneEffect.originalImage')}</h3>
+               <div className="relative w-full aspect-[3/4] border-2 border-dashed border-white/20 rounded-xl overflow-hidden bg-black/20">
+                 <img src={originalImage} className="w-full h-full object-contain" alt="Original" />
+                 {/* Click overlay to change could go here */}
+               </div>
+            </div>
 
-          <RefinePanel
-            value={refineText}
-            width={500}
-            onChange={setRefineText}
-            onApplyAll={() => {
-              console.log('Apply instruction:', refineText);
-              // gọi API regenerate ở đây
-            }}
-          />
+            {/* RIGHT: CLONED */}
+            <div className="bg-white/[0.02] border border-white/10 rounded-2xl p-6 flex flex-col h-full">
+               <h3 className="text-lg font-bold mb-4 text-white/90">{t('cloneEffect.clonedImage')}</h3>
+               <div className="relative w-full aspect-[3/4] border-2 border-dashed border-white/20 rounded-xl overflow-hidden bg-black/20 flex items-center justify-center">
+                  {generatedImage ? (
+                     <img src={generatedImage} className="w-full h-full object-contain" alt="Cloned Result" />
+                  ) : isGenerating ? (
+                     <div className="flex flex-col items-center gap-3">
+                        <Loader2 className="w-10 h-10 text-indigo-400 animate-spin" />
+                        <span className="text-white/50 font-medium">Generating clones...</span>
+                     </div>
+                  ) : (
+                     <div className="text-center px-6">
+                        <p className="text-white/30 text-sm mb-4">Ready to create magic?</p>
+                        <button
+                          onClick={handleGenerate}
+                          className="px-6 py-2 bg-white text-black rounded-lg font-bold text-sm hover:bg-white/90 transition"
+                        >
+                          Generate Illustration
+                        </button>
+                     </div>
+                  )}
+               </div>
+            </div>
+          </div>
 
-          {/* ACTIONS */}
-          <div className="flex items-center gap-4 mt-4">
+          {/* REFINE PANEL */}
+          <div className="w-full max-w-2xl bg-[#111] border border-white/10 rounded-2xl p-6 shadow-2xl">
+             <h4 className="font-bold text-white mb-2">{t('common.refineLabel')}</h4>
+             <textarea
+                className="
+                  w-full
+                  bg-[#222]
+                  border
+                  border-white/10
+                  rounded-xl
+                  p-4
+                  text-sm
+                  text-white
+                  placeholder:text-white/30
+                  focus:outline-none
+                  focus:border-indigo-500/50
+                  focus:ring-1
+                  focus:ring-indigo-500/50
+                  resize-none
+                  min-h-[100px]
+                  mb-4
+                "
+                placeholder={t('common.refinePlaceholder')}
+                value={refineText}
+                onChange={(e) => setRefineText(e.target.value)}
+             />
+             <button
+                onClick={handleGenerate}
+                disabled={isGenerating}
+                className="
+                  px-5 py-2.5
+                  bg-white
+                  text-black
+                  rounded-lg
+                  font-bold
+                  text-sm
+                  flex
+                  items-center
+                  gap-2
+                  hover:bg-gray-100
+                  transition
+                  disabled:opacity-50
+                  disabled:cursor-not-allowed
+                "
+             >
+                <RefreshCcw className={`w-4 h-4 ${isGenerating ? 'animate-spin' : ''}`} />
+                {generatedImage ? t('common.regenerate') : "Generate"}
+             </button>
+          </div>
+
+          {/* FOOTER ACTIONS */}
+          <div className="flex items-center gap-4 mt-2">
             <button
+              onClick={handleDownload}
+              disabled={!generatedImage}
               className="
-                px-6 py-3
+                px-8 py-3
                 bg-white
                 text-black
                 rounded-lg
-                font-semibold
-                hover:bg-white/90
-                transition
+                font-bold
                 flex
                 items-center
                 gap-2
+                hover:bg-white/90
+                transition
+                disabled:opacity-50
+                disabled:cursor-not-allowed
               "
             >
+              <Download className="w-4 h-4" />
               {t('common.download')}
             </button>
 
-            {/* Start Over */}
             <button
+              onClick={resetAll}
               className="
-                px-6 py-3
+                px-8 py-3
                 border
                 border-white/20
                 rounded-lg
-                text-white/70
+                text-white
                 font-semibold
-                transition
                 hover:bg-white/10
-                hover:text-white
+                transition
               "
-              onClick={resetAll}
             >
               {t('common.startOver')}
             </button>
           </div>
+
         </div>
       )}
     </div>

@@ -86,6 +86,19 @@ export const ProductSceneGenerator: React.FC = () => {
                   }}
                   onRemove={() => setCurrentImage(undefined)}
                 />
+                <div className="mt-6 flex flex-col gap-3">
+                  <textarea
+                    rows={3}
+                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/15
+                              text-white placeholder-white/40 resize-none
+                              focus:outline-none focus:border-white"
+                    placeholder={t('photoshoot.modelGenPlaceholder')}
+                  />
+
+                  <button className="w-full px-6 py-3 rounded-xl bg-white text-black font-semibold hover:bg-white/90">
+                    {t('photoshoot.generateModel')}
+                  </button>
+                </div>
               </div>
             </div>
 

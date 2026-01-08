@@ -4,6 +4,8 @@ import { useTranslation } from 'react-i18next';
 import { BackToTools } from '../../components/ui/BackToTools';
 import { LanguageSwitcher } from '../../components/ui/LanguageSwitcher';
 import { GoBackTools } from '../../components/ui/GoBackTools';
+import { generateTypographicIllustration } from '../../services/geminiServices';
+import { Loader2 } from 'lucide-react';
 
 export const TypographicIllustrator: React.FC = () => {
   const { t } = useTranslation();
@@ -14,10 +16,45 @@ export const TypographicIllustrator: React.FC = () => {
   // TEXTAREA INPUT STATE
   const [scenePrompt, setScenePrompt] = useState<string>('');
 
+  // GENERATION STATE
+  const [resultImage, setResultImage] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState<boolean>(false);
+
   // RESET ALL STATE
   const resetAll = () => {
     setStatus(true);
     setScenePrompt('');
+    setResultImage(null);
+    setIsGenerating(false);
+  };
+
+  const handleGenerate = async () => {
+    if (!scenePrompt.trim()) return;
+
+    setStatus(false);
+    setIsGenerating(true);
+    setResultImage(null);
+
+    try {
+      const url = await generateTypographicIllustration(scenePrompt);
+      setResultImage(url);
+    } catch (error) {
+      console.error("Generation failed:", error);
+      alert(t('typographicIllustrator.generationFailed'));
+      // Optionally go back to input or stay in result view with error state
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleDownload = () => {
+    if (!resultImage) return;
+    const link = document.createElement('a');
+    link.href = resultImage;
+    link.download = `typographic-illustration-${Date.now()}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
@@ -30,7 +67,7 @@ export const TypographicIllustrator: React.FC = () => {
           <GoBackTools
             onClick={() => {
               setStatus(true); // quay lại màn input
-              resetAll();      // reset các state khác
+              // resetAll();   // user might want to edit prompt, so don't full reset
             }}
           />
         )}
@@ -108,7 +145,7 @@ export const TypographicIllustrator: React.FC = () => {
               disabled:cursor-not-allowed
             "
             disabled={!scenePrompt.trim()}
-            onClick={() => setStatus(false)}
+            onClick={handleGenerate}
           >
             {t('typographicIllustrator.generateButton')}
           </button>
@@ -168,14 +205,27 @@ export const TypographicIllustrator: React.FC = () => {
                 items-center
                 justify-center
                 overflow-hidden
+                relative
               "
             >
-              {/* Sau này thay src bằng image generate được */}
-              <img
-                src="/placeholder.png"
-                alt="Illustration result"
-                className="w-full h-full object-contain"
-              />
+              {isGenerating ? (
+                <div className="flex flex-col items-center gap-3">
+                  <Loader2 className="w-10 h-10 animate-spin text-white/50" />
+                  <span className="text-white/50 font-medium">
+                    {t('typographicIllustrator.generatingButton')}
+                  </span>
+                </div>
+              ) : resultImage ? (
+                <img
+                  src={resultImage}
+                  alt="Illustration result"
+                  className="w-full h-full object-contain"
+                />
+              ) : (
+                <span className="text-white/30">
+                  {t('polaroid.generationFailed')}
+                </span>
+              )}
             </div>
           </div>
 
@@ -183,6 +233,8 @@ export const TypographicIllustrator: React.FC = () => {
           <div className="flex items-center gap-4 mt-4">
             {/* Download */}
             <button
+              onClick={handleDownload}
+              disabled={!resultImage || isGenerating}
               className="
                 px-6 py-3
                 bg-white
@@ -194,6 +246,8 @@ export const TypographicIllustrator: React.FC = () => {
                 flex
                 items-center
                 gap-2
+                disabled:opacity-50
+                disabled:cursor-not-allowed
               "
             >
               {t('common.download')}

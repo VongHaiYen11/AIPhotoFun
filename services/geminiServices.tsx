@@ -30,11 +30,15 @@ const extractImageData = (response: GenerateContentResponse): string => {
     }
     
     const candidate = response.candidates[0];
+    let generatedText = "";
     
     if (candidate.content && candidate.content.parts) {
         for (const part of candidate.content.parts) {
             if (part.inlineData) {
                 return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+            }
+            if (part.text) {
+                generatedText += part.text;
             }
         }
     }
@@ -43,7 +47,11 @@ const extractImageData = (response: GenerateContentResponse): string => {
          throw new Error(`Image generation stopped due to: ${candidate.finishReason}. Check safety ratings.`);
     }
 
-    throw new Error("No image was generated. The model may have returned only text.");
+    if (generatedText) {
+        throw new Error(`Model returned text instead of image: "${generatedText.substring(0, 150)}..."`);
+    }
+
+    throw new Error("No image was generated. The model may have returned only text or empty content.");
 };
 
 
@@ -181,15 +189,24 @@ export async function swapFacesInImage(sourceImageDataUrl: string, targetFaceDat
 }
 
 export async function generatePhotoBoothImage(imageDataUrl: string, count: number): Promise<string> {
-    const prompt = `Take the person from the provided image and create a photobooth-style photo strip.
+    let gridLayout = "grid";
+    // Define explicit layouts to help the model count
+    if (count === 4) gridLayout = "2x2 grid (2 rows, 2 columns)";
+    else if (count === 6) gridLayout = "2x3 grid (2 columns, 3 rows)";
+    else if (count === 8) gridLayout = "2x4 grid (2 columns, 4 rows)";
+    else if (count === 9) gridLayout = "3x3 grid (3 rows, 3 columns)";
+    else if (count === 12) gridLayout = "3x4 grid (3 columns, 4 rows)";
+
+    const prompt = `Generate an image. Create a photobooth-style photo strip/collage using the person from the provided image.
 
     **CRITICAL INSTRUCTIONS:**
-    1.  Create a grid of **${count}** unique photos.
-    2.  Each photo in the grid must feature the **exact same person** from the original image.
-    3.  **Vary the Poses/Expressions:** Each photo must have a different, fun, classic photobooth expression or pose (e.g., smiling, laughing, winking, surprised, making a funny face, peace sign, etc.).
-    4.  **Maintain Identity:** The person's identity must be perfectly preserved across all photos.
-    5.  **Cohesive Style:** All photos should share a consistent lighting and style, as if taken in the same photobooth session.
-    6.  The final output must be a single image file containing the grid of photos.`;
+    1.  **Layout:** Generate a single image containing EXACTLY **${count}** separate panels arranged in a **${gridLayout}**.
+    2.  **Subject:** Every panel must feature the **exact same person** from the original image.
+    3.  **Variety:** Each of the ${count} panels must show a DIFFERENT pose or facial expression (smiling, laughing, serious, winking, peace sign, etc.).
+    4.  **Consistency:** Maintain consistent lighting and background style across all panels, typical of a photo booth.
+    5.  **Identity:** The person's facial features must remain consistent and identical to the source image.
+    6.  **Counting:** Do not generate more or fewer than ${count} panels.
+    7.  **Format:** Output ONLY the final image. Do not provide any text descriptions.`;
     
     const imagePart = fileToGenerativePart(imageDataUrl);
 

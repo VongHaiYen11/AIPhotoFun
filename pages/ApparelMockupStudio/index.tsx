@@ -10,6 +10,8 @@ import { ImageResultHolder } from '../../components/ui/ImageResultHolder';
 import { useNavigate } from 'react-router-dom';
 import { GoBackTools } from '../../components/ui/GoBackTools';
 import { useApparelMockupStudio } from './useApparelMockupStudio';
+import { generateGraphicFromPrompt, generateApparelMockup, generateProductMockup } from '../../services/geminiServices';
+import { Loader2 } from 'lucide-react';
 
 
 export const ApparelMockupStudio: React.FC = () => {
@@ -28,6 +30,12 @@ export const ApparelMockupStudio: React.FC = () => {
     colorways, setColorways
   } = useApparelMockupStudio();
 
+  // Local state for generation status and results
+  const [isGeneratingDesign, setIsGeneratingDesign] = useState(false);
+  const [isGeneratingMockups, setIsGeneratingMockups] = useState(false);
+  const [generatedResults, setGeneratedResults] = useState<Array<{url: string, name: string}>>([]);
+
+
   const mockupStyle = ['hanging', 'flatLay', 'folded']
 
   const isValidHex = (hex: string) =>
@@ -41,7 +49,74 @@ export const ApparelMockupStudio: React.FC = () => {
     // Options
     setSelectedMockup('hanging');
     setAIDesignerPrompt('');
-    setStyleDescPrompt('')
+    setStyleDescPrompt('');
+    // Results
+    setGeneratedResults([]);
+    setIsGeneratingDesign(false);
+    setIsGeneratingMockups(false);
+  };
+
+  const handleGenerateDesign = async () => {
+    if (!AIDesignerPrompt.trim()) return;
+
+    setIsGeneratingDesign(true);
+    try {
+      const url = await generateGraphicFromPrompt(AIDesignerPrompt);
+      setCurrentImage(url);
+    } catch (error) {
+      console.error("Design generation failed:", error);
+      alert("Failed to generate design. Please try again.");
+    } finally {
+      setIsGeneratingDesign(false);
+    }
+  };
+
+  const handleGenerateMockups = async () => {
+    // Validation
+    if (!currentImage) {
+      alert("Please upload or generate a design first.");
+      return;
+    }
+    if (mode === 'Upload' && !uploadedMockup) {
+      alert("Please upload an apparel mockup image.");
+      return;
+    }
+    if (mode === 'Generate' && !styleDescPrompt.trim()) {
+      alert("Please describe the apparel style.");
+      return;
+    }
+
+    setStatus(false);
+    setIsGeneratingMockups(true);
+    setGeneratedResults([]);
+
+    try {
+      if (mode === 'Upload' && uploadedMockup) {
+        // Mode 1: Custom Mockup (Apply design to uploaded image)
+        // We generate a single result for the uploaded mockup
+        const url = await generateProductMockup(currentImage, uploadedMockup);
+        setGeneratedResults([{ url, name: 'Custom Mockup' }]);
+      } else {
+        // Mode 2: Generative Mockup (Create new apparel from scratch)
+        // Iterate through colorways
+        const colorsToGenerate = colorways.length > 0 ? colorways : ['#FFFFFF']; // Default to white if empty
+
+        for (const color of colorsToGenerate) {
+          const prompt = `${styleDescPrompt}. Color hex code: ${color}. Mockup style: ${selectedMockup}.`;
+          try {
+             const url = await generateApparelMockup(currentImage, prompt);
+             setGeneratedResults(prev => [...prev, { url, name: color }]);
+          } catch (e) {
+             console.error(`Failed to generate for color ${color}`, e);
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Mockup generation failed:", error);
+      alert("Failed to generate mockups.");
+    } finally {
+      setIsGeneratingMockups(false);
+    }
   };
 
 
@@ -55,7 +130,7 @@ export const ApparelMockupStudio: React.FC = () => {
           <GoBackTools
             onClick={() => {
               setStatus(true); // quay lại màn input
-              resetAll();      // reset các state khác
+              // resetAll();   // Do not reset all, user might want to tweak settings
             }}
           />
         )}
@@ -80,11 +155,11 @@ export const ApparelMockupStudio: React.FC = () => {
 
       {
         status ?  
-        <div className="flex flex-col items-center content-center">
+        <div className="flex flex-col items-center content-center w-full">
           <div className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* STEP 1 */}
             <div className="w-full md:col-span-1">
-              <div className="bg-white/[0.04] backdrop-blur-xl border border-white/50 rounded-3xl p-8 mb-8">
+              <div className="bg-white/[0.04] backdrop-blur-xl border border-white/50 rounded-3xl p-8 mb-8 h-full">
                 <h2 className="text-xl font-bold mb-6 text-center">
                   {t('productMockupGenerator.inputs')}
                 </h2>
@@ -96,6 +171,7 @@ export const ApparelMockupStudio: React.FC = () => {
                     setCurrentImage(base64);
                   }}
                   onRemove={() => setCurrentImage(undefined)}
+                  label={t('productMockupGenerator.uploadDesign')}
                 />
 
                 <div className="mt-6 flex flex-col gap-3">
@@ -110,10 +186,22 @@ export const ApparelMockupStudio: React.FC = () => {
                               text-white placeholder-white/40 resize-none
                               focus:outline-none focus:border-white"
                     placeholder={t('productMockupGenerator.aiGraphicDesignerPlaceholder')}
+                    disabled={isGeneratingDesign}
                   />
 
-                  <button className="w-full mt-2 px-6 py-2 rounded-xl bg-white text-black font-semibold hover:bg-white/90">
-                    {t('productMockupGenerator.generateWithAI')}
+                  <button 
+                    onClick={handleGenerateDesign}
+                    disabled={!AIDesignerPrompt.trim() || isGeneratingDesign}
+                    className="w-full mt-2 px-6 py-3 rounded-xl bg-white text-black font-semibold hover:bg-white/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {isGeneratingDesign ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        {t('productMockupGenerator.generating')}
+                      </>
+                    ) : (
+                      t('productMockupGenerator.generateWithAI')
+                    )}
                   </button>
                 </div>
 
@@ -134,9 +222,10 @@ export const ApparelMockupStudio: React.FC = () => {
               items-start
               w-full 
               md:col-span-1
+              transition-opacity
               ${!currentImage
-              ? 'opacity-50 cursor-not-allowed pointer-events-none'
-              : 'cursor-pointer'}
+              ? 'opacity-50 pointer-events-none'
+              : 'opacity-100'}
             `}>
                 <h2 className="text-xl font-bold">
                   {t('productMockupGenerator.designSettings')}
@@ -158,7 +247,7 @@ export const ApparelMockupStudio: React.FC = () => {
                   </h3>
 
                   {/* TOGGLE */}
-                  <div className="inline-flex bg-white/5 rounded-xl p-1 border border-white/20 w-full">
+                  <div className="inline-flex bg-white/5 rounded-xl p-1 border border-white/20 w-full mb-4">
                     <button
                       onClick={() => setMode('Generate')}
                       className={`flex-1 px-4 py-2 rounded-lg font-semibold transition
@@ -185,19 +274,20 @@ export const ApparelMockupStudio: React.FC = () => {
 
                   {/* APPAREL DETAILS OPTIONS */}
                   {mode === 'Upload' && (
-                    <div className=" mt-6 p-6 rounded-2xl bg-white/5 text-white/80">
-                      <h4 className="font-semibold text-white/10"> {t('productMockupGenerator.uploadApparelMockup')}</h4>
+                    <div className="w-full mt-2 p-6 rounded-2xl bg-white/5 text-white/80 border border-white/10">
+                      <h4 className="font-semibold text-white mb-3"> {t('productMockupGenerator.uploadApparelMockup')}</h4>
                         <SideImageLoader
                           value={uploadedMockup}
                           onChange={setuploadedMockup}
                           onRemove={() => setuploadedMockup(undefined)}
                           fullWidth
+                          className="h-64"
                         />
                     </div>
                   )}
 
                   {mode === 'Generate' && (
-                    <div className="mt-6 flex flex-col">
+                    <div className="mt-2 flex flex-col w-full">
                       <h4 className="font-semibold text-white mb-3"> {t('productMockupGenerator.apparelStyle')}</h4>
                       <textarea
                         value={styleDescPrompt} 
@@ -208,11 +298,11 @@ export const ApparelMockupStudio: React.FC = () => {
                                   focus:outline-none focus:border-white"
                         placeholder={t('productMockupGenerator.apparelStylePlaceholder')}
                       />
-                      <p className=" text-white/40 mb-3" >
+                      <p className=" text-white/40 mb-3 text-sm" >
                         {t('productMockupGenerator.apparelStyleDesc')}
                       </p>
-                      <div className="w-full">
-                        <h4 className="font-semibold text-white"> {t('productMockupGenerator.mockupStyle')}</h4>
+                      <div className="w-full mt-2">
+                        <h4 className="font-semibold text-white mb-2"> {t('productMockupGenerator.mockupStyle')}</h4>
                         <SingleSelectList
                           feature="productMockupGenerator"
                           keys={mockupStyle}  
@@ -225,8 +315,9 @@ export const ApparelMockupStudio: React.FC = () => {
                   )}
                 </div>
 
+                {/* COLORWAY GENERATOR (Visible mostly for Generate mode, but disabled if Upload) */}
                 <div
-                  className="
+                  className={`
                     rounded-xl
                     border border-white/20
                     bg-white/5
@@ -238,7 +329,9 @@ export const ApparelMockupStudio: React.FC = () => {
                     flex-col
                     gap-4
                     w-full
-                  "
+                    transition-opacity
+                    ${mode === 'Upload' ? 'opacity-50 pointer-events-none' : 'opacity-100'}
+                  `}
                 >
                   {/* TITLE */}
                   <div>
@@ -290,7 +383,7 @@ export const ApparelMockupStudio: React.FC = () => {
                         disabled:cursor-not-allowed
                       "
                     >
-                      Add
+                      {t('productMockupGenerator.add')}
                     </button>
                   </div>
 
@@ -340,45 +433,65 @@ export const ApparelMockupStudio: React.FC = () => {
             </div>
 
           </div> 
-            <div className="w-fit mt-4">
+            <div className="w-fit mt-8">
               {/* Generate Photos */}
               <button
                 className="
-                  px-6 py-3
+                  px-8 py-4
                   bg-white text-black
-                  rounded-lg
-                  font-semibold
+                  rounded-xl
+                  font-bold
+                  text-lg
                   hover:bg-white/90
                   transition
                   disabled:opacity-50
                   disabled:cursor-not-allowed
+                  shadow-xl
+                  flex items-center gap-3
                 "
-                disabled={colorways.length === 0}
-                onClick={() => setStatus(false)}
+                disabled={
+                    !currentImage ||
+                    (mode === 'Generate' && colorways.length === 0) ||
+                    (mode === 'Upload' && !uploadedMockup)
+                }
+                onClick={handleGenerateMockups}
               >
-                {t('productMockupGenerator.generateColorways', {
-                  count: colorways.length,
+                 {t('productMockupGenerator.generateColorways', {
+                  count: mode === 'Upload' ? 1 : colorways.length,
                 })}
               </button>
             </div>
           </div>:
-          <div className="flex flex-col gap-6 items-center">
-            <div className="flex gap-6 content-start">
-              <ImageResultHolder
-                imageUrl={currentImage}
-                name="Original"
-                width={360}
-              />
-              <ImageResultHolder
-                imageUrl={currentImage}
-                name="Original"
-                width={360}
-              />
+          <div className="flex flex-col gap-6 items-center w-full max-w-6xl">
+            
+            {/* RESULTS GRID */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
+              {generatedResults.map((result, idx) => (
+                <ImageResultHolder
+                  key={idx}
+                  imageUrl={result.url}
+                  name={result.name}
+                  width={undefined} // Let grid handle width
+                />
+              ))}
+
+              {isGeneratingMockups && (
+                   <div className="flex flex-col items-center justify-center p-12 bg-white/5 border border-white/10 rounded-2xl animate-pulse min-h-[400px]">
+                      <Loader2 className="w-10 h-10 text-indigo-400 animate-spin mb-4" />
+                      <span className="text-white/60 font-semibold">{t('productMockupGenerator.generatingMockups')}</span>
+                   </div>
+              )}
             </div>
+            
+            {!isGeneratingMockups && generatedResults.length === 0 && (
+                <div className="text-white/50 text-center py-10">
+                    No results generated.
+                </div>
+            )}
 
 
-            <div className="flex items-center gap-4">
-              {/* Generate Photos */}
+            <div className="flex items-center gap-4 mt-8">
+              {/* Download All (Mock) */}
               <button
                 className="
                   px-6 py-3
@@ -390,6 +503,7 @@ export const ApparelMockupStudio: React.FC = () => {
                   disabled:opacity-50
                   disabled:cursor-not-allowed
                 "
+                disabled={generatedResults.length === 0}
               >
                 {t(`common.downloadAll`)}
               </button>
@@ -405,10 +519,7 @@ export const ApparelMockupStudio: React.FC = () => {
                   hover:bg-white/10
                   hover:text-white
                 "
-                onClick={() => {
-                  setStatus(true)
-                  resetAll()
-                }}
+                onClick={resetAll}
               >
                 {t('common.startOver')}
               </button>
