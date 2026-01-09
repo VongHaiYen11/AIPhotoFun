@@ -13,6 +13,7 @@ export const Inpainter: React.FC = () => {
 
   // State
   const [originalImage, setOriginalImage] = useState<string | undefined>();
+  const [maskedImage, setMaskedImage] = useState<string | undefined>(); // Store the prepared mask for regeneration
   const [resultImage, setResultImage] = useState<string | undefined>();
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [prompt, setPrompt] = useState<string>('');
@@ -30,6 +31,7 @@ export const Inpainter: React.FC = () => {
   const resetAll = () => {
     setOriginalImage(undefined);
     setResultImage(undefined);
+    setMaskedImage(undefined);
     setIsProcessing(false);
     setPrompt('');
   };
@@ -157,6 +159,20 @@ export const Inpainter: React.FC = () => {
     ctx.moveTo(x, y);
   };
 
+  const runInpainting = async (maskDataUrl: string, promptText: string) => {
+    setIsProcessing(true);
+    setResultImage(undefined);
+    try {
+      const url = await fillMaskedImage(promptText, maskDataUrl);
+      setResultImage(url);
+    } catch (error) {
+      console.error("Inpainting failed:", error);
+      alert(t('inpainter.inpaintingFailed'));
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   const handleGenerate = async () => {
     if (!originalImage || !imageRef.current || !canvasRef.current) return;
     if (!prompt.trim()) {
@@ -211,16 +227,29 @@ export const Inpainter: React.FC = () => {
       ctx.drawImage(maskSnapshotCanvas, 0, 0);
 
       const maskedImageDataUrl = tempCanvas.toDataURL('image/png');
+      
+      // Store the masked image for regeneration
+      setMaskedImage(maskedImageDataUrl);
 
       // 4. Call API
-      const url = await fillMaskedImage(prompt, maskedImageDataUrl);
-      setResultImage(url);
-      setIsProcessing(false);
+      await runInpainting(maskedImageDataUrl, prompt);
     } catch (error) {
-      console.error("Inpainting failed:", error);
+      console.error("Inpainting preparation failed:", error);
       alert(t('inpainter.inpaintingFailed'));
       setIsProcessing(false);
     }
+  };
+
+  const handleRegenerate = async () => {
+    if (!maskedImage) {
+        // Fallback if somehow lost, though button should be disabled
+        return; 
+    }
+    if (!prompt.trim()) {
+        alert("Please enter a prompt.");
+        return;
+    }
+    await runInpainting(maskedImage, prompt);
   };
 
   const handleDownload = () => {
@@ -237,7 +266,7 @@ export const Inpainter: React.FC = () => {
   const showUpload = !originalImage;
   const showResult = !!resultImage || isProcessing;
   const showEditor = originalImage && !showResult;
-  
+
   return (
     <div className="w-full max-w-7xl px-6 md:px-12 py-12 flex flex-col items-center text-white">
       {/* Top bar */}
@@ -436,22 +465,33 @@ export const Inpainter: React.FC = () => {
                 <div className="flex flex-col gap-4">
                     <h3 className="text-center font-bold text-lg text-white/90">{t('inpainter.inpaintedResult')}</h3>
                     <div className="w-full border-2 border-dashed border-white/20 rounded-2xl p-2 bg-black/20 flex items-center justify-center relative min-h-[400px]">
-                        {isProcessing ? (
-                             <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
-                                <Loader2 className="w-12 h-12 text-indigo-400 animate-spin" />
-                                <span className="text-white/50 font-medium">{t('inpainter.generating')}</span>
-                             </div>
-                        ) : (
-                             <img 
-                                src={resultImage} 
-                                alt="Result" 
-                                className="w-full h-auto max-h-[600px] object-contain rounded-xl" 
-                             />
-                        )}
+                        
+                        {/* Invisible Original to force height match */}
+                        <img 
+                            src={originalImage} 
+                            alt="" 
+                            className="w-full h-auto max-h-[600px] object-contain opacity-0 pointer-events-none" 
+                         />
+
+                        {/* Centered Result or Loader */}
+                        <div className="absolute inset-0 flex items-center justify-center p-2">
+                            {isProcessing ? (
+                                <div className="flex flex-col items-center justify-center gap-4">
+                                    <Loader2 className="w-12 h-12 text-indigo-400 animate-spin" />
+                                    <span className="text-white/50 font-medium">{t('inpainter.generating')}</span>
+                                </div>
+                            ) : (
+                                <img 
+                                    src={resultImage} 
+                                    alt="Result" 
+                                    className="w-full h-full object-contain rounded-xl" 
+                                />
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
-
+              
             {/* Bottom Actions */}
             <div className="w-full max-w-2xl bg-[#111] border border-white/10 rounded-2xl p-6 shadow-2xl">
                  <h4 className="font-bold text-white mb-2">{t('common.refineLabel')}</h4>
@@ -480,8 +520,8 @@ export const Inpainter: React.FC = () => {
                     onChange={(e) => setPrompt(e.target.value)}
                  />
                  <button
-                    onClick={handleGenerate}
-                    disabled={isProcessing}
+                    onClick={handleRegenerate}
+                    disabled={isProcessing || !maskedImage}
                     className="
                       px-5 py-2.5
                       bg-white/10
@@ -497,6 +537,8 @@ export const Inpainter: React.FC = () => {
                       transition
                       w-full
                       justify-center
+                      disabled:opacity-50
+                      disabled:cursor-not-allowed
                     "
                  >
                     {t('common.regenerate')}
@@ -522,7 +564,7 @@ export const Inpainter: React.FC = () => {
             </div>
         </div>
       )}
-
+      
     </div>
   );
 };

@@ -1,14 +1,13 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
+/** 
+ * @license 
+ * SPDX-License-Identifier: Apache-2.0 
 */
-
 import { GoogleGenAI, Modality, Type, GenerateContentResponse } from "@google/genai";
 
 // Initialize the Google AI client
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-// Helper to convert data URL to Part
+// Helper to convert data URL to Part   
 const fileToGenerativePart = (dataUrl: string) => {
     const match = dataUrl.match(/^data:(image\/(?:png|jpeg|webp));base64,(.*)$/);
     if (!match) {
@@ -23,8 +22,8 @@ const fileToGenerativePart = (dataUrl: string) => {
         },
     };
 };
-
-// Helper function to extract image data from response
+   
+// Helper function to extract image data from response  
 const extractImageData = (response: GenerateContentResponse): string => {
     if (!response.candidates || response.candidates.length === 0) {
         throw new Error("No candidates returned from the model.");
@@ -57,7 +56,7 @@ const extractImageData = (response: GenerateContentResponse): string => {
 
 
 /**
- * A generic function to generate an image based on a prompt and multiple input images.
+ * A generic function to generate an image based on a prompt and multiple input images.  
  */
 export async function generateStyledImage(prompt: string, imageUrls: string[], additionalInstructions?: string): Promise<string> {
     const fullPrompt = additionalInstructions ? `${prompt}\n\nAdditional Instructions: ${additionalInstructions}` : prompt;
@@ -130,7 +129,7 @@ export async function fillMaskedImage(prompt: string, maskedImageDataUrl: string
 }
 
 export async function removeObjectFromImage(maskedImageDataUrl: string): Promise<string> {
-    // Explicitly instruct the model about the transparency mask
+    // Explicitly instruct the model about the transparency mask  
     const prompt = `Inpainting and Object Removal Task.
     The provided image contains a transparent area (alpha channel = 0) where an object was removed.
     
@@ -203,7 +202,7 @@ export async function swapFacesInImage(sourceImageDataUrl: string, targetFaceDat
 
 export async function generatePhotoBoothImage(imageDataUrl: string, count: number): Promise<string> {
     let gridLayout = "grid";
-    // Define explicit layouts to help the model count
+    // Define explicit layouts to help the model count   
     if (count === 4) gridLayout = "2x2 grid (2 rows, 2 columns)";
     else if (count === 6) gridLayout = "2x3 grid (2 columns, 3 rows)";
     else if (count === 8) gridLayout = "2x4 grid (2 columns, 4 rows)";
@@ -445,7 +444,7 @@ Your output must be a valid JSON object and nothing else.`;
             }
         },
     });
-    
+
     try {
         let text = response.text.trim();
         return JSON.parse(text);
@@ -454,7 +453,7 @@ Your output must be a valid JSON object and nothing else.`;
         throw new Error("Model returned invalid JSON for concept suggestions.");
     }
 }
-    
+
 export async function recolorImageWithPaletteImage(
     originalImageDataUrl: string,
     paletteImageDataUrl: string,
@@ -481,7 +480,6 @@ The result should be a new version of the first image, but as if onlay created u
         contents: { parts: [originalImagePart, paletteImagePart, { text: prompt }] },
         config: { responseModalities: [Modality.IMAGE, Modality.TEXT] },
     });
-
     return extractImageData(response);
 }
 
@@ -496,7 +494,6 @@ export async function generateImageFromPrompt(prompt: string): Promise<string> {
             outputMimeType: 'image/png'
         }
     });
-    
     if (!response.generatedImages || response.generatedImages.length === 0) {
         throw new Error("AI failed to generate an image.");
     }
