@@ -2,6 +2,8 @@
  * @license
  * SPDX-License-Identifier: Apache-2.0
 */
+
+
 import { GoogleGenAI, Modality, Type, GenerateContentResponse } from "@google/genai";
 
 // Initialize the Google AI client
@@ -124,12 +126,20 @@ export async function fillMaskedImage(prompt: string, maskedImageDataUrl: string
 }
 
 export async function removeObjectFromImage(maskedImageDataUrl: string): Promise<string> {
-    const prompt = `Your task is object removal. The user has provided an image with a transparent area (the mask), indicating the object(s) to be removed. You must intelligently fill in the transparent area, making it look as if the object was never there.
-
-    **CRITICAL INSTRUCTIONS:**
-    1.  Analyze the surrounding pixels, textures, and patterns.
-    2.  Fill the masked area by photorealistically extending the background.
-    3.  The final result must be seamless, with no visible artifacts, blurs, or edges where the object used to be. The lighting and perspective must be perfectly consistent.`;
+    // Explicitly instruct the model about the transparency mask
+    const prompt = `Inpainting Task (Object Removal).
+    The provided image contains a TRANSPARENT region (alpha channel = 0). This transparent area represents the mask of an object that has been removed.
+    
+    **Goal:**
+    Fill the transparent area with background content that matches the surrounding scene, effectively making the object disappear.
+    
+    **Instructions:**
+    1.  Identify the transparent hole in the image.
+    2.  Analyze the surrounding background textures (walls, floor, nature, patterns).
+    3.  Seamlessly extend this background into the transparent area.
+    4.  Ensure consistent lighting and perspective.
+    5.  DO NOT regenerate the object. The area must become background.
+    6.  The final output must be a fully opaque, complete image.`;
     
     const imagePart = fileToGenerativePart(maskedImageDataUrl);
 
@@ -296,14 +306,24 @@ export async function generatePoseFromImage(imageDataUrl: string, boneNames: str
 }
 
 export async function generateDepthMap(imageDataUrl: string): Promise<string> {
-    const prompt = "Generate a depth map for this image. The output must be a grayscale image where white is closest and black is farthest.";
+    const prompt = `Your task is to generate a depth map for the provided image.
+    
+    **CRITICAL INSTRUCTIONS:**
+    1.  **Output Format:** You MUST return a single image file. Do NOT return text.
+    2.  **Depth Representation:** The output image must be a grayscale depth map where:
+        - **White (Light)** represents objects that are **closest** to the camera.
+        - **Black (Dark)** represents objects that are **farthest** away (background).
+    3.  **Accuracy:** Preserve the shapes and edges of the objects in the original image.`;
     
     const imagePart = fileToGenerativePart(imageDataUrl);
 
     const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash-image',
         contents: { parts: [imagePart, { text: prompt }] },
-        config: { responseModalities: [Modality.IMAGE, Modality.TEXT] },
+        config: { 
+            responseModalities: [Modality.IMAGE, Modality.TEXT],
+            systemInstruction: "You are an expert depth map generator. You always return an image."
+        },
     });
 
     return extractImageData(response);
@@ -374,7 +394,7 @@ Your task is to create a photorealistic apparel mockup.
 }
 
 export async function generateTypographicIllustration(phrase: string): Promise<string> {
-    const prompt = `Using only the letters from the phrase ["${phrase}"], create a minimalist black and white typographic illustration depicting the scene described by the phrase. Each letter should be creatively shaped and arranged to form a sense of motion and represent the elements in the scene. The design must be clean and minimal, comprising the entire manipulated alphabet of ["${phrase}"] without any additional shapes or lines. The letters should bend or curve to mimic the natural forms of the scene while remaining legible. The final image should be on a clean, solid, light grey background.`;
+    const prompt = `Using only the letters from the phrase ["${phrase}"], create a minimalist black and white typographic illustration depicting the scene described by the phrase. Each letter should be creatively shaped and arranged to form a sense of motion and represent the elements in the scene. The design must be clean and minimal, comprising the entire manipulated alphabet of ["${phrase}"] without any additional shapes or lines. The letters should bend or curve to mimic the natural forms of the scene while remaining legible. The final image should be on a clean, solid, light grey background. Output only the image.`;
     
     const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash-image',
@@ -390,7 +410,7 @@ export async function generateTypographicIllustration(phrase: string): Promise<s
 
     return extractImageData(response);
 }
-
+    
 export async function generateConceptSuggestions(imageUrls: string[], availablePoses: string[], availableAngles: string[], availableGrades: string[]): Promise<{ background: string, poses: string[], cameraAngle: string, colorGrade: string }> {
     const imageParts = imageUrls.map(url => fileToGenerativePart(url));
     const prompt = `Analyze the provided image(s) of clothing and/or objects. Based on them, generate a creative photoshoot concept. Provide your answer as a valid JSON object.
@@ -449,7 +469,7 @@ Your task is to perform a color palette swap.
 3.  **Preserve Structure:** The content, shapes, lighting, and textures of the first image must be perfectly preserved. The only change should be the colors.
 4.  **Enforce Dimensions:** The final output image MUST be exactly ${dimensions.width} pixels wide by ${dimensions.height} pixels tall.
 
-The result should be a new version of the first image, but as if it were created using only the colors from the second image.`;
+The result should be a new version of the first image, but as if onlay created using only the colors from the second image.`;
 
     const originalImagePart = fileToGenerativePart(originalImageDataUrl);
     const paletteImagePart = fileToGenerativePart(paletteImageDataUrl);
@@ -465,7 +485,7 @@ The result should be a new version of the first image, but as if it were created
 
 export async function generateImageFromPrompt(prompt: string): Promise<string> {
     const fullPrompt = `Photorealistic, full-body photo of a model for a fashion photoshoot. ${prompt}. Clean studio background, professional lighting, looking at the camera.`;
-    
+        
     const response = await ai.models.generateImages({
         model: 'imagen-4.0-generate-001',
         prompt: fullPrompt,

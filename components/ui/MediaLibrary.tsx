@@ -138,7 +138,7 @@ export const MediaLibrary: React.FC = () => {
                   </button>
                 </div>
               </div>
-
+              
               {/* Body / Grid */}
               <div className="flex-1 overflow-y-auto p-6 bg-black/20">
                 {images.length === 0 ? (
@@ -167,7 +167,7 @@ export const MediaLibrary: React.FC = () => {
                             alt="Generated"
                             className="w-full h-full object-cover"
                           />
-                          
+                           
                           {/* Selection Overlay */}
                           <div className={`
                             absolute inset-0 bg-black/40 flex items-center justify-center transition-opacity

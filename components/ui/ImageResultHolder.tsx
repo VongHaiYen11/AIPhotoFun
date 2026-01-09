@@ -26,7 +26,7 @@ export const ImageResultHolder: React.FC<ImageResultHolderProps> = ({
     try {
       const res = await fetch(imageUrl);
       const blob = await res.blob();
-
+      
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
 

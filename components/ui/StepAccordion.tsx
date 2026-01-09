@@ -9,7 +9,7 @@ interface StepAccordionProps {
   onToggle: () => void;
   children: React.ReactNode;
 }
-
+ 
 export const StepAccordion: React.FC<StepAccordionProps> = ({
   title,
   subtitle,
