@@ -12,23 +12,25 @@ import { OutfitExtractor } from './pages/OutfitExtractor/index';
 import { DepthEffect } from './pages/DepthEffect/index';
 import { BackgroundRemover } from './pages/BackgroundRemover/index';
 import { ObjectRemover } from './pages/ObjectRemover/index';
+import { Inpainter } from './pages/Inpainter/index';
 
 export const App: React.FC = () => {
   return (
     <Router>
       <MainLayout>
         <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/photoshoot" element={<Photoshoot />} />
-          <Route path="/productSceneGenerator" element={<ProductSceneGenerator />} />
-          <Route path="/apparelMockupStudio" element={<ApparelMockupStudio />} />
-          <Route path="/typographicIllustrator" element={<TypographicIllustrator />} />
-          <Route path="/photoBooth" element={<PhotoBooth />} />
-          <Route path="/cloneEffect" element={<CloneEffect />} />
-          <Route path="/outfitExtractor" element={<OutfitExtractor />} />
-          <Route path="/depthEffect" element={<DepthEffect />} />
-          <Route path="/backgroundRemover" element={<BackgroundRemover />} />
-          <Route path="/objectRemover" element={<ObjectRemover />} />
+          <Route path="/" element={<Home />} /> 
+          <Route path="/photoshoot" element={<Photoshoot />} /> 
+          <Route path="/productSceneGenerator" element={<ProductSceneGenerator />} /> 
+          <Route path="/apparelMockupStudio" element={<ApparelMockupStudio />} /> 
+          <Route path="/typographicIllustrator" element={<TypographicIllustrator />} /> 
+          <Route path="/photoBooth" element={<PhotoBooth />} /> 
+          <Route path="/cloneEffect" element={<CloneEffect />} /> 
+          <Route path="/outfitExtractor" element={<OutfitExtractor />} /> 
+          <Route path="/depthEffect" element={<DepthEffect />} /> 
+          <Route path="/backgroundRemover" element={<BackgroundRemover />} /> 
+          <Route path="/objectRemover" element={<ObjectRemover />} /> 
+          <Route path="/inpainter" element={<Inpainter />} /> 
         </Routes>
       </MainLayout>
     </Router>

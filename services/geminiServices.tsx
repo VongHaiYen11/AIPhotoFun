@@ -104,14 +104,19 @@ export async function extractOutfitFromImage(imageDataUrl: string, instructions?
 }
 
 export async function fillMaskedImage(prompt: string, maskedImageDataUrl: string, additionalInstructions?: string): Promise<string> {
-    const fullPrompt = `Your task is to perform inpainting. The user has provided an image with a transparent area (the mask). You must fill in this transparent area based on the following instruction: "${prompt}".
+    const fullPrompt = `Inpainting Task.
+    The provided image contains a transparent area (the mask).
+    
+    **Goal:**
+    Fill the transparent area based EXCLUSIVELY on this instruction: "${prompt}".
 
     **CRITICAL INSTRUCTIONS:**
-    1.  The filled area must seamlessly blend with the rest of the image in terms of lighting, texture, color, and perspective.
-    2.  The result should be a single, cohesive, photorealistic image.
-    3.  Do not alter the non-transparent parts of the image.
+    1.  **Content:** Generate the object, texture, or scene described in the prompt within the transparent area.
+    2.  **Integration:** The new content must seamlessly blend with the surrounding pixels in terms of lighting, shadows, perspective, and style.
+    3.  **Cohesion:** The final result should look like a single, unaltered photograph.
+    4.  **Constraint:** Do NOT change the non-transparent parts of the image.
 
-    ${additionalInstructions ? `**User Refinement:** ${additionalInstructions}` : ''}`;
+    ${additionalInstructions ? `**Refinement:** ${additionalInstructions}` : ''}`;
     
     const imagePart = fileToGenerativePart(maskedImageDataUrl);
 
@@ -367,7 +372,6 @@ export async function generateGraphicFromPrompt(prompt: string): Promise<string>
     return `data:image/png;base64,${base64ImageBytes}`;
 }
 
-
 export async function generateApparelMockup(designDataUrl: string, apparelPrompt: string): Promise<string> {
     const prompt = `
 Your task is to create a photorealistic apparel mockup.
@@ -441,7 +445,7 @@ Your output must be a valid JSON object and nothing else.`;
             }
         },
     });
-
+    
     try {
         let text = response.text.trim();
         return JSON.parse(text);
@@ -450,7 +454,7 @@ Your output must be a valid JSON object and nothing else.`;
         throw new Error("Model returned invalid JSON for concept suggestions.");
     }
 }
-
+    
 export async function recolorImageWithPaletteImage(
     originalImageDataUrl: string,
     paletteImageDataUrl: string,
@@ -492,11 +496,10 @@ export async function generateImageFromPrompt(prompt: string): Promise<string> {
             outputMimeType: 'image/png'
         }
     });
-
+    
     if (!response.generatedImages || response.generatedImages.length === 0) {
         throw new Error("AI failed to generate an image.");
     }
-    
     const base64ImageBytes: string = response.generatedImages[0].image.imageBytes;
     return `data:image/png;base64,${base64ImageBytes}`;
 }
