@@ -9,10 +9,10 @@ import { TypographicIllustrator } from './pages/TypographicIllustrator/index';
 import { PhotoBooth } from './pages/PhotoBooth/index';
 import { CloneEffect } from './pages/CloneEffect/index';
 import { OutfitExtractor } from './pages/OutfitExtractor/index';
+import { DepthEffect } from './pages/DepthEffect/index';
 
 export const App: React.FC = () => {
   return (
-    // Removed 'future' prop as it is not supported in the current type definition of HashRouterProps
     <Router>
       <MainLayout>
         <Routes>
@@ -24,6 +24,7 @@ export const App: React.FC = () => {
           <Route path="/photoBooth" element={<PhotoBooth />} />
           <Route path="/cloneEffect" element={<CloneEffect />} />
           <Route path="/outfitExtractor" element={<OutfitExtractor />} />
+          <Route path="/depthEffect" element={<DepthEffect />} />
         </Routes>
       </MainLayout>
     </Router>
