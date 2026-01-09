@@ -2,7 +2,6 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Languages } from 'lucide-react';
 
-
 export const LanguageSwitcher: React.FC = () => {
   const { i18n } = useTranslation();
 

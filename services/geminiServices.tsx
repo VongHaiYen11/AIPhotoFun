@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
 */
 
-
 import { GoogleGenAI, Modality, Type, GenerateContentResponse } from "@google/genai";
 
 // Initialize the Google AI client
@@ -127,19 +126,18 @@ export async function fillMaskedImage(prompt: string, maskedImageDataUrl: string
 
 export async function removeObjectFromImage(maskedImageDataUrl: string): Promise<string> {
     // Explicitly instruct the model about the transparency mask
-    const prompt = `Inpainting Task (Object Removal).
-    The provided image contains a TRANSPARENT region (alpha channel = 0). This transparent area represents the mask of an object that has been removed.
+    const prompt = `Inpainting and Object Removal Task.
+    The provided image contains a transparent area (alpha channel = 0) where an object was removed.
     
-    **Goal:**
-    Fill the transparent area with background content that matches the surrounding scene, effectively making the object disappear.
+    **TASK:**
+    Fill the transparent area ("inpainting") to restore the background.
     
-    **Instructions:**
-    1.  Identify the transparent hole in the image.
-    2.  Analyze the surrounding background textures (walls, floor, nature, patterns).
-    3.  Seamlessly extend this background into the transparent area.
-    4.  Ensure consistent lighting and perspective.
-    5.  DO NOT regenerate the object. The area must become background.
-    6.  The final output must be a fully opaque, complete image.`;
+    **CRITICAL INSTRUCTIONS:**
+    1.  Analyze the surrounding pixels (context) around the transparent hole.
+    2.  Generate new pixels to fill the hole that perfectly continue the surrounding background textures, lighting, and shadows.
+    3.  The result must look as if the object never existed.
+    4.  Output the full image with the hole filled. Do not leave any transparency.
+    5.  DO NOT regenerate the object. The goal is to make it disappear.`;
     
     const imagePart = fileToGenerativePart(maskedImageDataUrl);
 
@@ -498,6 +496,7 @@ export async function generateImageFromPrompt(prompt: string): Promise<string> {
     if (!response.generatedImages || response.generatedImages.length === 0) {
         throw new Error("AI failed to generate an image.");
     }
+    
     const base64ImageBytes: string = response.generatedImages[0].image.imageBytes;
     return `data:image/png;base64,${base64ImageBytes}`;
 }

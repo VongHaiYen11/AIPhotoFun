@@ -27,7 +27,7 @@ export const TypographicIllustrator: React.FC = () => {
     setResultImage(null);
     setIsGenerating(false);
   };
-
+ 
   const handleGenerate = async () => {
     if (!scenePrompt.trim()) return;
 

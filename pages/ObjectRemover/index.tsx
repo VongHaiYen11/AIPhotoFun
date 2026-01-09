@@ -7,10 +7,10 @@ import { ImageUpload } from '../../components/ui/ImageUpload';
 import { GoBackTools } from '../../components/ui/GoBackTools';
 import { removeObjectFromImage } from '../../services/geminiServices';
 import { Loader2, Download, Eraser, Brush, Trash2, Undo2 } from 'lucide-react';
-
+  
 export const ObjectRemover: React.FC = () => {
   const { t } = useTranslation();
-
+  
   // State
   const [originalImage, setOriginalImage] = useState<string | undefined>();
   const [resultImage, setResultImage] = useState<string | undefined>();
@@ -24,7 +24,7 @@ export const ObjectRemover: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-
+  
   // Reset
   const resetAll = () => {
     setOriginalImage(undefined);
@@ -46,18 +46,18 @@ export const ObjectRemover: React.FC = () => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
   };
 
-  // Ensure canvas is cleared when new image loads
+  // Ensure canvas is cleared when new image loads  
   useEffect(() => {
     clearCanvas();
   }, [originalImage]);
 
-  // Sync canvas size with image size
+  // Sync canvas size with image size  
   useEffect(() => {
     const resizeCanvas = () => {
       if (containerRef.current && canvasRef.current && imageRef.current) {
         const { width, height } = imageRef.current.getBoundingClientRect();
         
-        // Only update if dimensions actually changed to avoid clearing canvas unnecessarily
+        // Only update if dimensions actually changed to avoid clearing canvas unnecessarily   
         if (canvasRef.current.width !== width || canvasRef.current.height !== height) {
             canvasRef.current.width = width;
             canvasRef.current.height = height;
@@ -66,7 +66,7 @@ export const ObjectRemover: React.FC = () => {
     };
 
     window.addEventListener('resize', resizeCanvas);
-    // Initial delay to ensure image is rendered
+    // Initial delay to ensure image is rendered   
     const timeout = setTimeout(resizeCanvas, 100);
     return () => {
         window.removeEventListener('resize', resizeCanvas);
@@ -74,7 +74,7 @@ export const ObjectRemover: React.FC = () => {
     };
   }, [originalImage, isProcessing]);
 
-  // Helper to get coordinates
+  // Helper to get coordinates   
   const getCoords = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
       const canvas = canvasRef.current;
       if (!canvas) return { x: 0, y: 0 };
@@ -90,11 +90,11 @@ export const ObjectRemover: React.FC = () => {
       return { x, y };
   };
 
-  // Drawing Logic
+  // Drawing Logic  
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     setIsDrawing(true);
     
-    // Immediate draw on start to handle clicks/taps instantly
+    // Immediate draw on start to handle clicks/taps instantly   
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -108,15 +108,15 @@ export const ObjectRemover: React.FC = () => {
 
     if (tool === 'brush') {
       ctx.globalCompositeOperation = 'source-over';
-      ctx.strokeStyle = 'rgba(255, 255, 255, 1.0)'; // White mask
+      ctx.strokeStyle = 'rgba(255, 255, 255, 1.0)'; // White mask  
     } else {
-      ctx.globalCompositeOperation = 'destination-out'; // Eraser
+      ctx.globalCompositeOperation = 'destination-out'; // Eraser   
       ctx.strokeStyle = 'rgba(0,0,0,1)';
     }
 
     ctx.beginPath();
     ctx.moveTo(x, y);
-    ctx.lineTo(x, y); // Draw dot
+    ctx.lineTo(x, y); // Draw dot  
     ctx.stroke();
   };
 
@@ -125,7 +125,7 @@ export const ObjectRemover: React.FC = () => {
     const canvas = canvasRef.current;
     if (canvas) {
       const ctx = canvas.getContext('2d');
-      if (ctx) ctx.beginPath(); // Reset path
+      if (ctx) ctx.beginPath(); // Reset path  
     }
   };
 
@@ -138,7 +138,7 @@ export const ObjectRemover: React.FC = () => {
 
     const { x, y } = getCoords(e);
 
-    // Ensure styles are maintained during drag (React state might trigger re-renders but ctx persists)
+    // Ensure styles are maintained during drag (React state might trigger re-renders but ctx persists)  
     ctx.lineWidth = brushSize;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
@@ -153,7 +153,7 @@ export const ObjectRemover: React.FC = () => {
     ctx.lineTo(x, y);
     ctx.stroke();
     
-    // For smooth continuous lines:
+    // For smooth continuous lines:  
     ctx.beginPath();
     ctx.moveTo(x, y);
   };
@@ -161,13 +161,13 @@ export const ObjectRemover: React.FC = () => {
   const handleGenerate = async () => {
     if (!originalImage || !imageRef.current || !canvasRef.current) return;
 
-    // 1. Synchronously capture dimensions and mask data before unmounting/state change
+    // 1. Synchronously capture dimensions and mask data before unmounting/state change  
     const naturalWidth = imageRef.current.naturalWidth;
     const naturalHeight = imageRef.current.naturalHeight;
     const displayWidth = imageRef.current.width;
     const displayHeight = imageRef.current.height;
 
-    // Create a temp canvas to hold the mask data scaled to natural size
+    // Create a temp canvas to hold the mask data scaled to natural size  
     const maskSnapshotCanvas = document.createElement('canvas');
     maskSnapshotCanvas.width = naturalWidth;
     maskSnapshotCanvas.height = naturalHeight;
@@ -175,19 +175,19 @@ export const ObjectRemover: React.FC = () => {
     
     if (!maskSnapshotCtx) return;
 
-    // Draw the current display canvas onto the snapshot canvas (scaling up/down)
+    // Draw the current display canvas onto the snapshot canvas (scaling up/down)   
     maskSnapshotCtx.drawImage(
         canvasRef.current,
         0, 0, displayWidth, displayHeight,
         0, 0, naturalWidth, naturalHeight
     );
 
-    // 2. Switch state to processing (shows loading view)
+    // 2. Switch state to processing (shows loading view)  
     setIsProcessing(true);
     setResultImage(undefined);
 
     try {
-      // 3. Create the final composition for the API
+      // 3. Create the final composition for the API  
       const tempCanvas = document.createElement('canvas');
       tempCanvas.width = naturalWidth;
       tempCanvas.height = naturalHeight;
@@ -210,10 +210,11 @@ export const ObjectRemover: React.FC = () => {
       // 4. Call API
       const url = await removeObjectFromImage(maskedImageDataUrl);
       setResultImage(url);
+      setIsProcessing(false);
     } catch (error) {
       console.error("Object removal failed:", error);
       alert(t('objectRemover.removalFailed'));
-      setIsProcessing(false); // Go back to editor
+      setIsProcessing(false); // Go back to editor   
     }
   };
 
@@ -249,7 +250,7 @@ export const ObjectRemover: React.FC = () => {
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.8 }}
-        className="text-center mb-12"
+        className="text-center mb-12"  
       >
         <div className="flex items-center justify-center gap-3 mb-4">
             <Brush className="w-8 h-8 text-white" />
@@ -261,7 +262,7 @@ export const ObjectRemover: React.FC = () => {
           {t('objectRemover.subtitle')}
         </p>
       </motion.div>
-
+      
       {/* VIEW 1: UPLOAD */}
       {showUpload && (
         <div
@@ -463,7 +464,7 @@ export const ObjectRemover: React.FC = () => {
             </div>
         </div>
       )}
-            
+
     </div>
   );
 };
