@@ -10,6 +10,7 @@ import { PhotoBooth } from './pages/PhotoBooth/index';
 import { CloneEffect } from './pages/CloneEffect/index';
 import { OutfitExtractor } from './pages/OutfitExtractor/index';
 import { DepthEffect } from './pages/DepthEffect/index';
+import { BackgroundRemover } from './pages/BackgroundRemover/index';
 
 export const App: React.FC = () => {
   return (
@@ -25,6 +26,7 @@ export const App: React.FC = () => {
           <Route path="/cloneEffect" element={<CloneEffect />} />
           <Route path="/outfitExtractor" element={<OutfitExtractor />} />
           <Route path="/depthEffect" element={<DepthEffect />} />
+          <Route path="/backgroundRemover" element={<BackgroundRemover />} />
         </Routes>
       </MainLayout>
     </Router>
