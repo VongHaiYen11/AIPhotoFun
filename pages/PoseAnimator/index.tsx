@@ -1,4 +1,4 @@
-import React, { useState, DragEvent, ChangeEvent } from 'react';
+import React, { useState, DragEvent, ChangeEvent, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { generateStyledImage } from '../../services/geminiServices';
@@ -75,7 +75,7 @@ const ImageViewer = ({ title, imageUrl, children }: { title: string, imageUrl: s
 // Main component
 export function PoseAnimator() {
     const { t } = useTranslation();
-    const { addImageToLibrary } = useMediaLibrary();
+    const { addImageToLibrary, selectedImageForTool, clearSelectedImageForTool } = useMediaLibrary();
     const [view, setView] = useState<'character' | 'pose' | 'result'>('character');
     const [characterImage, setCharacterImage] = useState<string | null>(null);
     const [poseImage, setPoseImage] = useState<string | null>(null);
@@ -87,6 +87,20 @@ export function PoseAnimator() {
     const [error, setError] = useState<string | null>(null);
     const [poseSourceTab, setPoseSourceTab] = useState<'upload' | 'draw' | 'threeD'>('upload');
     const [refinePrompt, setRefinePrompt] = useState('');
+
+    // Handle Media Library Selection
+    useEffect(() => {
+        if (selectedImageForTool) {
+            if (!characterImage) {
+                setCharacterImage(selectedImageForTool);
+            } else if (!poseImage) {
+                setPoseImage(selectedImageForTool);
+            } else {
+                setCharacterImage(selectedImageForTool);
+            }
+            clearSelectedImageForTool();
+        }
+    }, [selectedImageForTool, clearSelectedImageForTool, characterImage, poseImage]);
 
     const handleCharacterImageUpload = (file: File) => {
         const reader = new FileReader();

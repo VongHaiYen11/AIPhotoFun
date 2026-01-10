@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useMediaLibrary } from '../../contexts/MediaLibraryContext';
 import { cn } from '../../lib/utils';
+import { Download } from 'lucide-react';
 
 export const MediaLibrary: React.FC = () => {
     const { t } = useTranslation();
@@ -26,6 +27,16 @@ export const MediaLibrary: React.FC = () => {
             selectImageForTool(imageUrl);
             setIsOpen(false);
         }
+    };
+
+    const handleDownload = (e: React.MouseEvent, imageUrl: string) => {
+        e.stopPropagation();
+        const link = document.createElement('a');
+        link.href = imageUrl;
+        link.download = `media-library-${Date.now()}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     };
 
     const handleDeleteSelected = () => {
@@ -121,7 +132,21 @@ export const MediaLibrary: React.FC = () => {
                                                 )}
                                             >
                                                 <img src={imgUrl} className="w-full h-full object-cover" alt={`Library image`} />
-                                                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                
+                                                {/* Hover Overlay */}
+                                                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                                    {!selectionMode && (
+                                                        <button 
+                                                            onClick={(e) => handleDownload(e, imgUrl)}
+                                                            className="p-2 bg-white/20 hover:bg-white/40 rounded-full text-white transition-colors"
+                                                            title={t('common.download')}
+                                                        >
+                                                            <Download className="w-5 h-5" />
+                                                        </button>
+                                                    )}
+                                                </div>
+
+                                                {/* Selection Checkbox */}
                                                 {selectionMode && (
                                                     <div className="absolute top-2 right-2 w-6 h-6 rounded-full border-2 border-white flex items-center justify-center bg-black/50">
                                                         {selectedImages.includes(imgUrl) && (

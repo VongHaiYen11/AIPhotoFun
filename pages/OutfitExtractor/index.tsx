@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { BackToTools } from '../../components/ui/BackToTools';
@@ -11,13 +11,21 @@ import { Loader2, Download, RefreshCcw } from 'lucide-react';
 
 export const OutfitExtractor: React.FC = () => {
   const { t } = useTranslation();
-  const { addImageToLibrary } = useMediaLibrary();
+  const { addImageToLibrary, selectedImageForTool, clearSelectedImageForTool } = useMediaLibrary();
 
   // State
   const [originalImage, setOriginalImage] = useState<string | undefined>();
   const [extractedImage, setExtractedImage] = useState<string | undefined>();
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [refineText, setRefineText] = useState('');
+
+  // Handle Media Library Selection
+  useEffect(() => {
+    if (selectedImageForTool) {
+      setOriginalImage(selectedImageForTool);
+      clearSelectedImageForTool();
+    }
+  }, [selectedImageForTool, clearSelectedImageForTool]);
 
   // Reset
   const resetAll = () => {

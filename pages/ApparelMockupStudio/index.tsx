@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { BackToTools } from '../../components/ui/BackToTools';
@@ -18,7 +18,7 @@ import { Loader2 } from 'lucide-react';
 export const ApparelMockupStudio: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { addImageToLibrary } = useMediaLibrary();
+  const { addImageToLibrary, selectedImageForTool, clearSelectedImageForTool } = useMediaLibrary();
 
   const {
     status, setStatus,
@@ -42,6 +42,21 @@ export const ApparelMockupStudio: React.FC = () => {
 
   const isValidHex = (hex: string) =>
   /^#([0-9A-Fa-f]{6})$/.test(hex);
+
+  // Handle Media Library Selection
+  useEffect(() => {
+    if (selectedImageForTool) {
+        if (!currentImage) {
+            setCurrentImage(selectedImageForTool);
+        } else if (mode === 'Upload' && !uploadedMockup) {
+            setuploadedMockup(selectedImageForTool);
+        } else {
+            // Default to replacing current design if everything is filled or logic falls through
+            setCurrentImage(selectedImageForTool);
+        }
+        clearSelectedImageForTool();
+    }
+  }, [selectedImageForTool, clearSelectedImageForTool, currentImage, mode, uploadedMockup, setCurrentImage, setuploadedMockup]);
 
   const resetAll = () => {
     // General

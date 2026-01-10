@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { BackToTools } from '../../components/ui/BackToTools';
@@ -20,7 +20,7 @@ import { useMediaLibrary } from '../../contexts/MediaLibraryContext';
 export const Photoshoot: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { addImageToLibrary } = useMediaLibrary();
+  const { addImageToLibrary, selectedImageForTool, clearSelectedImageForTool } = useMediaLibrary();
   const {
     status, setStatus,
     currentImage, setCurrentImage,
@@ -40,6 +40,38 @@ export const Photoshoot: React.FC = () => {
     isGeneratingPhotos, setIsGeneratingPhotos,
     generatedResults, setGeneratedResults
   } = usePhotoshoot();
+
+  // Handle Media Library Selection
+  useEffect(() => {
+    if (selectedImageForTool) {
+      if (status) {
+        // If we are in setup mode, check if we need to set the main image or others
+        // Simple logic: if currentImage is empty, set it. 
+        // If we want more complex logic (e.g. set outfit if currentImage exists), we can add it here.
+        // For now, let's just set the main model image as that's the primary use case.
+        if (!currentImage) {
+            setCurrentImage(selectedImageForTool);
+            setModelLibrary((prev) =>
+                prev.includes(selectedImageForTool) ? prev : [...prev, selectedImageForTool]
+            );
+        } else if (!outfitImage && openStep === 2) {
+             setOutfitImage(selectedImageForTool);
+        } else if (!objectImage && openStep === 2) {
+             setObjectImage(selectedImageForTool);
+        } else if (!backgroundImage && openStep === 2) {
+             setBackgroundImage(selectedImageForTool);
+        } else {
+            // Default fallback to main image replacement
+            setCurrentImage(selectedImageForTool);
+            setModelLibrary((prev) =>
+                prev.includes(selectedImageForTool) ? prev : [...prev, selectedImageForTool]
+            );
+        }
+      }
+      clearSelectedImageForTool();
+    }
+  }, [selectedImageForTool, clearSelectedImageForTool, currentImage, status, openStep, outfitImage, objectImage, backgroundImage, setCurrentImage, setModelLibrary, setOutfitImage, setObjectImage, setBackgroundImage]);
+
 
   const cameraAngle = ['eyeLevel', 'lowAngle', 'highAngle', 'dutchAngle', 'wormsEyeView', 'birdsEyeView']
   const prefixedAngles = cameraAngle.map(angle => `angles.${angle}`);

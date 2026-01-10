@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { BackToTools } from '../../components/ui/BackToTools';
@@ -11,7 +11,7 @@ import { Loader2, Download, MousePointerClick, Check, Eraser } from 'lucide-reac
 
 export const BackgroundRemover: React.FC = () => {
   const { t } = useTranslation();
-  const { addImageToLibrary } = useMediaLibrary();
+  const { addImageToLibrary, selectedImageForTool, clearSelectedImageForTool } = useMediaLibrary();
 
   // State
   const [originalImage, setOriginalImage] = useState<string | undefined>();
@@ -20,6 +20,16 @@ export const BackgroundRemover: React.FC = () => {
   const [clickCoords, setClickCoords] = useState<{ x: number; y: number } | null>(null);
 
   const imageRef = useRef<HTMLImageElement>(null);
+
+  // Handle Media Library Selection
+  useEffect(() => {
+    if (selectedImageForTool) {
+      setOriginalImage(selectedImageForTool);
+      setResultImage(undefined);
+      setClickCoords(null);
+      clearSelectedImageForTool();
+    }
+  }, [selectedImageForTool, clearSelectedImageForTool]);
 
   // Reset
   const resetAll = () => {

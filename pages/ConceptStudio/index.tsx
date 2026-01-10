@@ -178,7 +178,7 @@ const ADULT_POSES = [
 
 export const ConceptStudio: React.FC = () => {
     const { t } = useTranslation();
-    const { addImageToLibrary } = useMediaLibrary();
+    const { addImageToLibrary, selectedImageForTool, clearSelectedImageForTool } = useMediaLibrary();
     const [step, setStep] = useState<Step>('UPLOAD');
     
     // Uploaded images
@@ -202,6 +202,20 @@ export const ConceptStudio: React.FC = () => {
     
     // Compose options
     const [selectedPoses, setSelectedPoses] = useState<string[]>([]);
+
+    // Handle Media Library Selection
+    useEffect(() => {
+        if (selectedImageForTool) {
+            if (!characterImage) {
+                setCharacterImage(selectedImageForTool);
+            } else if (!conceptImage) {
+                setConceptImage(selectedImageForTool);
+            } else {
+                setCharacterImage(selectedImageForTool);
+            }
+            clearSelectedImageForTool();
+        }
+    }, [selectedImageForTool, clearSelectedImageForTool, characterImage, conceptImage]);
 
     useEffect(() => {
         // Clear results when pose selection changes after a generation

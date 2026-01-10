@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { BackToTools } from '../../components/ui/BackToTools';
@@ -12,7 +12,7 @@ import { Loader2, Download } from 'lucide-react';
 
 export const PhotoBooth: React.FC = () => {
   const { t } = useTranslation();
-  const { addImageToLibrary } = useMediaLibrary();
+  const { addImageToLibrary, selectedImageForTool, clearSelectedImageForTool } = useMediaLibrary();
 
   const [status, setStatus] = useState<boolean>(true); // true = input, false = result
   const [currentImage, setCurrentImage] = useState<string | undefined>();
@@ -22,6 +22,14 @@ export const PhotoBooth: React.FC = () => {
 
   const numberOfPhotos = ['photos_4', 'photos_6', 'photos_8', 'photos_9', 'photos_12'];
   const prefixednumberOfPhotos = numberOfPhotos.map(sz => `numberOfPhotos.${sz}`);
+
+  // Handle Media Library Selection
+  useEffect(() => {
+    if (selectedImageForTool) {
+        setCurrentImage(selectedImageForTool);
+        clearSelectedImageForTool();
+    }
+  }, [selectedImageForTool, clearSelectedImageForTool]);
 
   const resetAll = () => {
     setStatus(true);

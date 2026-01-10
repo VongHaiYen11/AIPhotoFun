@@ -11,7 +11,7 @@ import { Loader2, Download, Eraser, Brush, Trash2, PenTool } from 'lucide-react'
   
 export const Inpainter: React.FC = () => {
   const { t } = useTranslation();
-  const { addImageToLibrary } = useMediaLibrary();
+  const { addImageToLibrary, selectedImageForTool, clearSelectedImageForTool } = useMediaLibrary();
 
   // State
   const [originalImage, setOriginalImage] = useState<string | undefined>();
@@ -28,6 +28,14 @@ export const Inpainter: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Handle Media Library Selection
+  useEffect(() => {
+    if (selectedImageForTool) {
+      setOriginalImage(selectedImageForTool);
+      clearSelectedImageForTool();
+    }
+  }, [selectedImageForTool, clearSelectedImageForTool]);
 
   // Reset
   const resetAll = () => {
@@ -567,7 +575,7 @@ export const Inpainter: React.FC = () => {
             </div>
         </div>
       )}
-      
+
     </div>
   );
 };

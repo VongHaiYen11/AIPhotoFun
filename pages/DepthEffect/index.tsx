@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { BackToTools } from '../../components/ui/BackToTools';
@@ -12,12 +12,20 @@ import { Loader2, Download, Layers } from 'lucide-react';
 
 export const DepthEffect: React.FC = () => {
   const { t } = useTranslation();
-  const { addImageToLibrary } = useMediaLibrary();
+  const { addImageToLibrary, selectedImageForTool, clearSelectedImageForTool } = useMediaLibrary();
 
   // State
   const [originalImage, setOriginalImage] = useState<string | undefined>();
   const [depthMap, setDepthMap] = useState<string | undefined>();
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
+
+  // Handle Media Library Selection
+  useEffect(() => {
+    if (selectedImageForTool) {
+      setOriginalImage(selectedImageForTool);
+      clearSelectedImageForTool();
+    }
+  }, [selectedImageForTool, clearSelectedImageForTool]);
 
   // Reset
   const resetAll = () => {

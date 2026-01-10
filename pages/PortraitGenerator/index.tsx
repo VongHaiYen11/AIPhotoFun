@@ -2,7 +2,7 @@
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
-import React, { useState, DragEvent, ChangeEvent } from 'react';
+import React, { useState, DragEvent, ChangeEvent, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { generateStyledImage } from '../../services/geminiServices';
@@ -151,7 +151,7 @@ const OptionsGroup = ({ label, children }: { label: string, children: React.Reac
 
 export const PortraitGenerator: React.FC = () => {
     const { t } = useTranslation();
-    const { addImageToLibrary } = useMediaLibrary();
+    const { addImageToLibrary, selectedImageForTool, clearSelectedImageForTool } = useMediaLibrary();
     const [view, setView] = useState<View>('config');
     const [uploadedImage, setUploadedImage] = useState<string | null>(null);
     const [generatedImage, setGeneratedImage] = useState<string | null>(null);
@@ -167,6 +167,17 @@ export const PortraitGenerator: React.FC = () => {
     const [background, setBackground] = useState<Background>('blue');
     const [printSize, setPrintSize] = useState<PrintSize>('3x4');
     const [expression, setExpression] = useState<Expression>('serious');
+
+    // Handle Media Library Selection
+    useEffect(() => {
+        if (selectedImageForTool) {
+            setUploadedImage(selectedImageForTool);
+            setGeneratedImage(null); // Reset result when new image is loaded
+            setPrintSheet(null);
+            setError(null);
+            clearSelectedImageForTool();
+        }
+    }, [selectedImageForTool, clearSelectedImageForTool]);
 
     const handleImageUpload = (file: File) => {
         const reader = new FileReader();

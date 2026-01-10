@@ -12,28 +12,75 @@ interface MediaLibraryContextType {
 
 const MediaLibraryContext = createContext<MediaLibraryContextType | undefined>(undefined);
 
+// IndexedDB Helper Functions
+const DB_NAME = 'AI_Creative_Suite_DB';
+const STORE_NAME = 'library_store';
+const KEY = 'media_library';
+
+const initDB = (): Promise<IDBDatabase> => {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, 1);
+        request.onupgradeneeded = (event) => {
+            const db = (event.target as IDBOpenDBRequest).result;
+            if (!db.objectStoreNames.contains(STORE_NAME)) {
+                db.createObjectStore(STORE_NAME);
+            }
+        };
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+    });
+};
+
+const saveToDB = async (images: string[]) => {
+    try {
+        const db = await initDB();
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        const store = tx.objectStore(STORE_NAME);
+        store.put(images, KEY);
+    } catch (e) {
+        console.error('Error saving to IndexedDB', e);
+    }
+};
+
+const loadFromDB = async (): Promise<string[]> => {
+    try {
+        const db = await initDB();
+        return new Promise((resolve) => {
+            const tx = db.transaction(STORE_NAME, 'readonly');
+            const store = tx.objectStore(STORE_NAME);
+            const request = store.get(KEY);
+            request.onsuccess = () => {
+                resolve(request.result || []);
+            };
+            request.onerror = () => resolve([]);
+        });
+    } catch (e) {
+        console.error('Error loading from IndexedDB', e);
+        return [];
+    }
+};
+
 export const MediaLibraryProvider = ({ children }: { children: ReactNode }) => {
     const [libraryImages, setLibraryImages] = useState<string[]>([]);
     const [selectedImageForTool, setSelectedImageForTool] = useState<string | null>(null);
+    const [isInitialized, setIsInitialized] = useState(false);
 
+    // Initial Load
     useEffect(() => {
-        try {
-            const savedLibrary = localStorage.getItem('ai-creative-suite-library');
-            if (savedLibrary) {
-                setLibraryImages(JSON.parse(savedLibrary));
-            }
-        } catch (error) {
-            console.error("Failed to load media library from localStorage", error);
-        }
+        const load = async () => {
+            const images = await loadFromDB();
+            setLibraryImages(images);
+            setIsInitialized(true);
+        };
+        load();
     }, []);
 
+    // Save on Change
     useEffect(() => {
-        try {
-            localStorage.setItem('ai-creative-suite-library', JSON.stringify(libraryImages));
-        } catch (error) {
-            console.error("Failed to save media library to localStorage", error);
+        if (isInitialized) {
+            saveToDB(libraryImages);
         }
-    }, [libraryImages]);
+    }, [libraryImages, isInitialized]);
 
     const addImageToLibrary = useCallback((imageUrl: string) => {
         setLibraryImages(prev => {
@@ -75,10 +122,4 @@ export const MediaLibraryProvider = ({ children }: { children: ReactNode }) => {
     );
 };
 
-export const useMediaLibrary = (): MediaLibraryContextType => {
-    const context = useContext(MediaLibraryContext);
-    if (!context) {
-        throw new Error('useMediaLibrary must be used within a MediaLibraryProvider');
-    }
-    return context;
-};
+export const use
