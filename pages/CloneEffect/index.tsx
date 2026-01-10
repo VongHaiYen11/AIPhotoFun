@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { BackToTools } from '../../components/ui/BackToTools';
@@ -41,6 +41,13 @@ export const CloneEffect: React.FC = () => {
       setIsGenerating(false);
     }
   };
+
+  // Trigger generation automatically when an image is uploaded
+  useEffect(() => {
+    if (originalImage) {
+      handleGenerate();
+    }
+  }, [originalImage]);
 
   const handleDownload = () => {
     if (!generatedImage) return;
@@ -121,7 +128,6 @@ export const CloneEffect: React.FC = () => {
                <h3 className="text-lg font-bold mb-4 text-white/90">{t('cloneEffect.originalImage')}</h3>
                <div className="relative w-full aspect-[3/4] border-2 border-dashed border-white/20 rounded-xl overflow-hidden bg-black/20">
                  <img src={originalImage} className="w-full h-full object-contain" alt="Original" />
-                 {/* Click overlay to change could go here */}
                </div>
             </div>
 
@@ -138,13 +144,7 @@ export const CloneEffect: React.FC = () => {
                      </div>
                   ) : (
                      <div className="text-center px-6">
-                        <p className="text-white/30 text-sm mb-4">Ready to create magic?</p>
-                        <button
-                          onClick={handleGenerate}
-                          className="px-6 py-2 bg-white text-black rounded-lg font-bold text-sm hover:bg-white/90 transition"
-                        >
-                          Generate Illustration
-                        </button>
+                        <p className="text-white/30 text-sm mb-4">Creating magic…</p>
                      </div>
                   )}
                </div>

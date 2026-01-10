@@ -16,7 +16,7 @@ export const GoBackTools: React.FC<GoBackToolsProps> = ({ onClick }) => {
     >
       <ArrowLeftIcon className="w-4 h-4 text-indigo-400" />
       <span className="text-sm font-bold tracking-wider text-slate-200">
-        {t('common.backToTools')}
+        {t('common.goBack')}
       </span>
     </button>
   );

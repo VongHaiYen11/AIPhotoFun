@@ -144,6 +144,7 @@ export const ApparelMockupStudio: React.FC = () => {
         transition={{ duration: 0.8 }}
         className="text-center mb-12"
       >
+        <IdCard className="w-8 h-8 text-white" />
         <h1 className="text-5xl md:text-7xl font-black tracking-tighter mb-6">
           {t('app.apparelMockupStudioTitle')}
         </h1>

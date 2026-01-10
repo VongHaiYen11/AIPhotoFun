@@ -110,11 +110,10 @@ export const PhotoBooth: React.FC = () => {
           </div>
 
           {/* RIGHT: OPTIONS */}
-          <div className="w-full">
+          <div className="w-full h-fit">
             <div
               className={`
                 rounded-2xl border border-white/15 bg-white/5 backdrop-blur-xl
-                h-full
                 p-8
                 flex 
                 flex-col
