@@ -144,7 +144,7 @@ export const DepthEffect: React.FC = () => {
             ) : (
                 <>
                     <Layers className="w-5 h-5" />
-                    Generate 3D Effect
+                    {t('depthEffect.generate3DEffect')}
                 </>
             )}
           </button>
@@ -174,7 +174,7 @@ export const DepthEffect: React.FC = () => {
 
                {/* Hint */}
                <p className="mt-4 text-sm text-white/40">
-                 Note: This effect simulates depth by displacing pixels based on the AI-generated depth map.
+                 {t('depthEffect.note')}
                </p>
           </div>
 
@@ -197,7 +197,7 @@ export const DepthEffect: React.FC = () => {
               "
             >
               <Download className="w-4 h-4" />
-              Download Depth Map
+              {t('depthEffect.downloadDepthMap')}
             </button>
 
             <button

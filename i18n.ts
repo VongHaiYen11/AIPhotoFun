@@ -433,6 +433,9 @@ const resources = {
       processingLayers: 'Processing Layers...',
       resultTitle: 'Move your mouse over the image',
       generationFailed: 'Generation Failed',
+      generate3DEffect: 'Generate 3D Effect',
+      downloadDepthMap: 'Download Depth Map',
+      note: 'Note: This effect simulates depth by displacing pixels based on the AI-generated depth map.'
     },
     productSceneGenerator: {
       subtitle: 'Generate multiple angles and scenes from a single product photo.',
@@ -978,6 +981,9 @@ const resources = {
       processingLayers: 'Đang xử lý các lớp...',
       resultTitle: 'Di chuyển chuột của bạn trên hình ảnh',
       generationFailed: 'Tạo ảnh thất bại',
+      generate3DEffect: 'Tạo Hiệu ứng 3D',
+      downloadDepthMap: 'Tải xuống Bản đồ Chiều sâu',
+      note: 'Lưu ý: Hiệu ứng này mô phỏng độ sâu bằng cách dịch chuyển các pixel dựa trên bản đồ độ sâu do AI tạo ra.'
     },
     productSceneGenerator: {
       subtitle: 'Tạo nhiều góc độ và cảnh khác nhau từ một bức ảnh sản phẩm duy nhất.',

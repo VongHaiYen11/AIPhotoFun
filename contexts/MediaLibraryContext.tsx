@@ -60,7 +60,7 @@ const loadFromDB = async (): Promise<string[]> => {
     }
 };
 
-export const MediaLibraryProvider = ({ children }: { children: ReactNode }) => {
+export const MediaLibraryProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [libraryImages, setLibraryImages] = useState<string[]>([]);
     const [selectedImageForTool, setSelectedImageForTool] = useState<string | null>(null);
     const [isInitialized, setIsInitialized] = useState(false);
@@ -122,4 +122,10 @@ export const MediaLibraryProvider = ({ children }: { children: ReactNode }) => {
     );
 };
 
-export const use
+export const useMediaLibrary = () => {
+    const context = useContext(MediaLibraryContext);
+    if (context === undefined) {
+        throw new Error('useMediaLibrary must be used within a MediaLibraryProvider');
+    }
+    return context;
+};

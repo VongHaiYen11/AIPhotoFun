@@ -49,7 +49,14 @@ const getDefaultRotations = (): Record<string, { x: number, y: number, z: number
     return initialState;
 };
 
-const BoneSlider = ({ boneName, axis, value, onChange }: { boneName: string, axis: 'x' | 'y' | 'z', value: number, onChange: (boneName: string, axis: 'x' | 'y' | 'z', value: number) => void }) => {
+interface BoneSliderProps {
+    boneName: string;
+    axis: 'x' | 'y' | 'z';
+    value: number;
+    onChange: (boneName: string, axis: 'x' | 'y' | 'z', value: number) => void;
+}
+
+const BoneSlider: React.FC<BoneSliderProps> = ({ boneName, axis, value, onChange }) => {
     const degrees = Math.round(value * 180 / Math.PI);
     return (
         <div className="grid grid-cols-[1rem_1fr_2.5rem] items-center gap-2">
@@ -175,9 +182,10 @@ export const ThreeDeeCanvas: React.FC<ThreeDeeCanvasProps> = ({ onPoseChange }) 
 
         const currentBones = bonesRef.current;
         Object.entries(rotations).forEach(([boneName, rot]) => {
+            const r = rot as { x: number, y: number, z: number };
             const bone = currentBones[boneName];
-            if (bone && rot) {
-                bone.rotation.set(rot.x, rot.y, rot.z);
+            if (bone && r) {
+                bone.rotation.set(r.x, r.y, r.z);
             }
         });
 

@@ -68,7 +68,10 @@ const PRINT_SIZE_OPTIONS: { value: PrintSize, label: string }[] = [
 
 
 // Uploader Component
-const Uploader = ({ onImageUpload }: { onImageUpload: (file: File) => void }) => {
+interface UploaderProps {
+    onImageUpload: (file: File) => void;
+}
+const Uploader: React.FC<UploaderProps> = ({ onImageUpload }) => {
     const { t } = useTranslation();
     const [isDragOver, setIsDragOver] = useState(false);
 
@@ -115,7 +118,12 @@ const Uploader = ({ onImageUpload }: { onImageUpload: (file: File) => void }) =>
     );
 };
 
-const ImageViewer = ({ title, imageUrl, children }: { title: string, imageUrl: string | null, children?: React.ReactNode }) => {
+interface ImageViewerProps {
+    title: string;
+    imageUrl: string | null;
+    children?: React.ReactNode;
+}
+const ImageViewer: React.FC<ImageViewerProps> = ({ title, imageUrl, children }) => {
     return (
         <div className="bg-white/[0.02] backdrop-blur-md border border-white/10 rounded-2xl p-6 shadow-lg flex flex-col w-full">
             <h3 className="font-bold text-2xl text-white mb-4">{title}</h3>
@@ -127,7 +135,12 @@ const ImageViewer = ({ title, imageUrl, children }: { title: string, imageUrl: s
     );
 };
 
-const OptionButton = ({ label, isSelected, onClick }: { label: string, isSelected: boolean, onClick: () => void }) => (
+interface OptionButtonProps {
+    label: string;
+    isSelected: boolean;
+    onClick: () => void;
+}
+const OptionButton: React.FC<OptionButtonProps> = ({ label, isSelected, onClick }) => (
     <button
         onClick={onClick}
         className={cn(
@@ -139,7 +152,11 @@ const OptionButton = ({ label, isSelected, onClick }: { label: string, isSelecte
     </button>
 );
 
-const OptionsGroup = ({ label, children }: { label: string, children: React.ReactNode }) => (
+interface OptionsGroupProps {
+    label: string;
+    children: React.ReactNode;
+}
+const OptionsGroup: React.FC<OptionsGroupProps> = ({ label, children }) => (
     <div>
         <h4 className="font-bold text-white/80 mb-2">{label}</h4>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
