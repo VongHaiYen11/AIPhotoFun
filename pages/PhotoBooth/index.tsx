@@ -7,10 +7,12 @@ import { ImageUpload } from '../../components/ui/ImageUpload';
 import { GoBackTools } from '../../components/ui/GoBackTools';
 import { SingleSelectList } from '../../components/ui/SingleSelectList';
 import { generatePhotoBoothImage } from '../../services/geminiServices';
+import { useMediaLibrary } from '../../contexts/MediaLibraryContext';
 import { Loader2, Download } from 'lucide-react';
 
 export const PhotoBooth: React.FC = () => {
   const { t } = useTranslation();
+  const { addImageToLibrary } = useMediaLibrary();
 
   const [status, setStatus] = useState<boolean>(true); // true = input, false = result
   const [currentImage, setCurrentImage] = useState<string | undefined>();
@@ -43,6 +45,7 @@ export const PhotoBooth: React.FC = () => {
 
       const url = await generatePhotoBoothImage(currentImage, count);
       setGeneratedImage(url);
+      addImageToLibrary(url);
     } catch (error) {
       console.error("Photo Booth generation failed:", error);
       alert(t('photoBooth.generationFailed'));
@@ -110,10 +113,11 @@ export const PhotoBooth: React.FC = () => {
           </div>
 
           {/* RIGHT: OPTIONS */}
-          <div className="w-full h-fit">
+          <div className="w-full">
             <div
               className={`
                 rounded-2xl border border-white/15 bg-white/5 backdrop-blur-xl
+                h-full
                 p-8
                 flex 
                 flex-col

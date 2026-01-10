@@ -1,3 +1,7 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
 import React, { useState, DragEvent, ChangeEvent } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -7,6 +11,7 @@ import { createPrintSheet } from '../../lib/printUtils';
 import { BackToTools } from '../../components/ui/BackToTools';
 import { GoBackTools } from '../../components/ui/GoBackTools';
 import { LanguageSwitcher } from '../../components/ui/LanguageSwitcher';
+import { useMediaLibrary } from '../../contexts/MediaLibraryContext';
 import { Loader2, Download, Upload, X, IdCard } from 'lucide-react';
 
 type Gender = 'male' | 'female';
@@ -146,6 +151,7 @@ const OptionsGroup = ({ label, children }: { label: string, children: React.Reac
 
 export const PortraitGenerator: React.FC = () => {
     const { t } = useTranslation();
+    const { addImageToLibrary } = useMediaLibrary();
     const [view, setView] = useState<View>('config');
     const [uploadedImage, setUploadedImage] = useState<string | null>(null);
     const [generatedImage, setGeneratedImage] = useState<string | null>(null);
@@ -262,6 +268,7 @@ export const PortraitGenerator: React.FC = () => {
             const croppedImageDataUrl = await cropImageToAspectRatio(uploadedImage, targetAspectRatio);
             const resultUrl = await generateStyledImage(prompt, [croppedImageDataUrl]);
             setGeneratedImage(resultUrl);
+            addImageToLibrary(resultUrl);
         } catch (err) {
             setError(err instanceof Error ? err.message : "An unknown error occurred.");
             console.error(err);

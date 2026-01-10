@@ -7,10 +7,12 @@ import { ImageUpload } from '../../components/ui/ImageUpload';
 import { GoBackTools } from '../../components/ui/GoBackTools';
 import { generateDepthMap } from '../../services/geminiServices';
 import { DepthViewer } from '../../components/ui/DepthViewer';
+import { useMediaLibrary } from '../../contexts/MediaLibraryContext';
 import { Loader2, Download, Layers } from 'lucide-react';
 
 export const DepthEffect: React.FC = () => {
   const { t } = useTranslation();
+  const { addImageToLibrary } = useMediaLibrary();
 
   // State
   const [originalImage, setOriginalImage] = useState<string | undefined>();
@@ -33,6 +35,7 @@ export const DepthEffect: React.FC = () => {
     try {
       const url = await generateDepthMap(originalImage);
       setDepthMap(url);
+      addImageToLibrary(url);
     } catch (error) {
       console.error("Depth map generation failed:", error);
       alert(t('depthEffect.generationFailed'));

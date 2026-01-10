@@ -15,10 +15,12 @@ import { RefinePanel } from '../../components/ui/RefinePanel';
 import { X, Loader2 } from 'lucide-react';
 import { usePhotoshoot } from './usePhotoshoot';
 import { generateImageFromPrompt, generateStyledImage } from '../../services/geminiServices';
+import { useMediaLibrary } from '../../contexts/MediaLibraryContext';
 
 export const Photoshoot: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { addImageToLibrary } = useMediaLibrary();
   const {
     status, setStatus,
     currentImage, setCurrentImage,
@@ -200,6 +202,7 @@ export const Photoshoot: React.FC = () => {
           url,
           pose: poseName
         }]);
+        addImageToLibrary(url);
       } catch (error) {
         console.error(`Failed to generate pose ${poseName}:`, error);
       }

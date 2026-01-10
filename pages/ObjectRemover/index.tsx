@@ -6,10 +6,12 @@ import { LanguageSwitcher } from '../../components/ui/LanguageSwitcher';
 import { ImageUpload } from '../../components/ui/ImageUpload';
 import { GoBackTools } from '../../components/ui/GoBackTools';
 import { removeObjectFromImage } from '../../services/geminiServices';
+import { useMediaLibrary } from '../../contexts/MediaLibraryContext';
 import { Loader2, Download, Eraser, Brush, Trash2, Undo2 } from 'lucide-react';
   
 export const ObjectRemover: React.FC = () => {
   const { t } = useTranslation();
+  const { addImageToLibrary } = useMediaLibrary();
   
   // State
   const [originalImage, setOriginalImage] = useState<string | undefined>();
@@ -210,6 +212,7 @@ export const ObjectRemover: React.FC = () => {
       // 4. Call API
       const url = await removeObjectFromImage(maskedImageDataUrl);
       setResultImage(url);
+      addImageToLibrary(url);
       setIsProcessing(false);
     } catch (error) {
       console.error("Object removal failed:", error);

@@ -11,12 +11,14 @@ import { useNavigate } from 'react-router-dom';
 import { GoBackTools } from '../../components/ui/GoBackTools';
 import { useApparelMockupStudio } from './useApparelMockupStudio';
 import { generateGraphicFromPrompt, generateApparelMockup, generateProductMockup } from '../../services/geminiServices';
+import { useMediaLibrary } from '../../contexts/MediaLibraryContext';
 import { Loader2 } from 'lucide-react';
 
 
 export const ApparelMockupStudio: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { addImageToLibrary } = useMediaLibrary();
 
   const {
     status, setStatus,
@@ -63,6 +65,7 @@ export const ApparelMockupStudio: React.FC = () => {
     try {
       const url = await generateGraphicFromPrompt(AIDesignerPrompt);
       setCurrentImage(url);
+      addImageToLibrary(url);
     } catch (error) {
       console.error("Design generation failed:", error);
       alert("Failed to generate design. Please try again.");
@@ -96,6 +99,7 @@ export const ApparelMockupStudio: React.FC = () => {
         // We generate a single result for the uploaded mockup
         const url = await generateProductMockup(currentImage, uploadedMockup);
         setGeneratedResults([{ url, name: 'Custom Mockup' }]);
+        addImageToLibrary(url);
       } else {
         // Mode 2: Generative Mockup (Create new apparel from scratch)
         // Iterate through colorways
@@ -106,6 +110,7 @@ export const ApparelMockupStudio: React.FC = () => {
           try {
              const url = await generateApparelMockup(currentImage, prompt);
              setGeneratedResults(prev => [...prev, { url, name: color }]);
+             addImageToLibrary(url);
           } catch (e) {
              console.error(`Failed to generate for color ${color}`, e);
           }
@@ -144,7 +149,6 @@ export const ApparelMockupStudio: React.FC = () => {
         transition={{ duration: 0.8 }}
         className="text-center mb-12"
       >
-        <IdCard className="w-8 h-8 text-white" />
         <h1 className="text-5xl md:text-7xl font-black tracking-tighter mb-6">
           {t('app.apparelMockupStudioTitle')}
         </h1>

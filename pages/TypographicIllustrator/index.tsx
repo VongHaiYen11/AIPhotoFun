@@ -5,10 +5,12 @@ import { BackToTools } from '../../components/ui/BackToTools';
 import { LanguageSwitcher } from '../../components/ui/LanguageSwitcher';
 import { GoBackTools } from '../../components/ui/GoBackTools';
 import { generateTypographicIllustration } from '../../services/geminiServices';
+import { useMediaLibrary } from '../../contexts/MediaLibraryContext';
 import { Loader2 } from 'lucide-react';
 
 export const TypographicIllustrator: React.FC = () => {
   const { t } = useTranslation();
+  const { addImageToLibrary } = useMediaLibrary();
 
   // true = input, false = result
   const [status, setStatus] = useState<boolean>(true);
@@ -38,6 +40,7 @@ export const TypographicIllustrator: React.FC = () => {
     try {
       const url = await generateTypographicIllustration(scenePrompt);
       setResultImage(url);
+      addImageToLibrary(url);
     } catch (error) {
       console.error("Generation failed:", error);
       alert(t('typographicIllustrator.generationFailed'));

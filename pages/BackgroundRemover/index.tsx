@@ -6,10 +6,12 @@ import { LanguageSwitcher } from '../../components/ui/LanguageSwitcher';
 import { ImageUpload } from '../../components/ui/ImageUpload';
 import { GoBackTools } from '../../components/ui/GoBackTools';
 import { removeBackgroundFromImageAtPoint } from '../../services/geminiServices';
+import { useMediaLibrary } from '../../contexts/MediaLibraryContext';
 import { Loader2, Download, MousePointerClick, Check, Eraser } from 'lucide-react';
 
 export const BackgroundRemover: React.FC = () => {
   const { t } = useTranslation();
+  const { addImageToLibrary } = useMediaLibrary();
 
   // State
   const [originalImage, setOriginalImage] = useState<string | undefined>();
@@ -55,6 +57,7 @@ export const BackgroundRemover: React.FC = () => {
     try {
       const url = await removeBackgroundFromImageAtPoint(originalImage, actualX, actualY);
       setResultImage(url);
+      addImageToLibrary(url);
     } catch (error) {
       console.error("Background removal failed:", error);
       alert(t('backgroundRemover.removalFailed'));

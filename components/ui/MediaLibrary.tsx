@@ -1,194 +1,149 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { Image as ImageIcon, X, Trash2, CheckCircle2 } from 'lucide-react';
-
-// Mock data type for future integration
-interface MediaItem {
-  id: string;
-  url: string;
-  timestamp: number;
-}
+import { useMediaLibrary } from '../../contexts/MediaLibraryContext';
+import { cn } from '../../lib/utils';
 
 export const MediaLibrary: React.FC = () => {
-  const { t } = useTranslation();
-  const [isOpen, setIsOpen] = useState(false);
-  const [images, setImages] = useState<MediaItem[]>([]); // Empty for now to match screenshot
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+    const { t } = useTranslation();
+    const { libraryImages, removeImagesFromLibrary, clearLibrary, selectImageForTool } = useMediaLibrary();
+    const [isOpen, setIsOpen] = useState(false);
+    const [selectionMode, setSelectionMode] = useState(false);
+    const [selectedImages, setSelectedImages] = useState<string[]>([]);
 
-  // Toggle selection
-  const toggleSelection = (id: string) => {
-    const newSelected = new Set(selectedIds);
-    if (newSelected.has(id)) {
-      newSelected.delete(id);
-    } else {
-      newSelected.add(id);
-    }
-    setSelectedIds(newSelected);
-  };
+    const toggleImageSelection = (imageUrl: string) => {
+        setSelectedImages(prev =>
+            prev.includes(imageUrl)
+                ? prev.filter(img => img !== imageUrl)
+                : [...prev, imageUrl]
+        );
+    };
 
-  // Mock delete function
-  const handleDelete = () => {
-    if (confirm(t('mediaLibrary.confirmDeleteSelected'))) {
-      setImages(prev => prev.filter(img => !selectedIds.has(img.id)));
-      setSelectedIds(new Set());
-    }
-  };
+    const handleImageClick = (imageUrl: string) => {
+        if (selectionMode) {
+            toggleImageSelection(imageUrl);
+        } else {
+            selectImageForTool(imageUrl);
+            setIsOpen(false);
+        }
+    };
 
-  return (
-    <>
-      {/* Floating Action Button (Bottom Right) */}
-      <motion.button
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
-        onClick={() => setIsOpen(true)}
-        className="
-          fixed bottom-8 right-8 z-40
-          w-14 h-14
-          bg-white text-black
-          rounded-full
-          shadow-[0_0_20px_rgba(255,255,255,0.3)]
-          flex items-center justify-center
-          cursor-pointer
-          hover:bg-gray-200
-          transition-colors
-        "
-        title={t('mediaLibrary.title')}
-      >
-        <ImageIcon className="w-6 h-6" />
-      </motion.button>
+    const handleDeleteSelected = () => {
+        if (window.confirm(t('mediaLibrary.confirmDeleteSelected'))) {
+            removeImagesFromLibrary(selectedImages);
+            setSelectedImages([]);
+            setSelectionMode(false);
+        }
+    };
 
-      {/* Modal Overlay */}
-      <AnimatePresence>
-        {isOpen && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8">
-            {/* Backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsOpen(false)}
-              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
-            />
+    const handleDeleteAll = () => {
+        if (window.confirm(t('mediaLibrary.confirmDeleteAll'))) {
+            clearLibrary();
+            setSelectedImages([]);
+            setSelectionMode(false);
+        }
+    };
 
-            {/* Modal Content */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="
-                relative w-full max-w-6xl h-[85vh]
-                bg-[#18181b] 
-                border border-white/10
-                rounded-2xl
-                shadow-2xl
-                flex flex-col
-                overflow-hidden
-              "
+    const toggleSelectionMode = () => {
+        setSelectionMode(!selectionMode);
+        setSelectedImages([]);
+    };
+
+    return (
+        <>
+            <motion.button
+                onClick={() => setIsOpen(true)}
+                className="fixed bottom-6 right-6 z-50 w-16 h-16 bg-neutral-200 rounded-full shadow-lg flex items-center justify-center text-black hover:bg-white transition-colors"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                aria-label={t('mediaLibrary.title')}
             >
-              {/* Header */}
-              <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-[#18181b]">
-                <h2 className="text-xl font-bold text-white">
-                  {t('mediaLibrary.title')}
-                </h2>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+                </svg>
+            </motion.button>
 
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => setIsOpen(false)}
-                    className="
-                      px-4 py-2
-                      rounded-lg
-                      bg-white/5
-                      text-white/70
-                      font-medium
-                      text-sm
-                      hover:bg-white/10
-                      hover:text-white
-                      transition
-                    "
-                  >
-                    {t('mediaLibrary.cancel')}
-                  </button>
-
-                  <button
-                    onClick={handleDelete}
-                    disabled={selectedIds.size === 0}
-                    className={`
-                      px-4 py-2
-                      rounded-lg
-                      font-medium
-                      text-sm
-                      flex items-center gap-2
-                      transition
-                      ${selectedIds.size > 0 
-                        ? 'bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30' 
-                        : 'bg-red-900/10 text-red-900/40 border border-red-900/10 cursor-not-allowed'}
-                    `}
-                  >
-                    {t('mediaLibrary.deleteSelected')} ({selectedIds.size})
-                  </button>
-
-                  <button
-                    onClick={() => setIsOpen(false)}
-                    className="ml-2 p-2 text-white/40 hover:text-white transition rounded-full hover:bg-white/5"
-                  >
-                    <X className="w-6 h-6" />
-                  </button>
-                </div>
-              </div>
-              
-              {/* Body / Grid */}
-              <div className="flex-1 overflow-y-auto p-6 bg-black/20">
-                {images.length === 0 ? (
-                  /* Empty State */
-                  <div className="w-full h-full flex flex-col items-center justify-center text-center">
-                    <p className="text-white/30 text-lg">
-                      {t('mediaLibrary.emptyMessage')}
-                    </p>
-                  </div>
-                ) : (
-                  /* Grid State (Prepared for future) */
-                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                    {images.map((img) => {
-                      const isSelected = selectedIds.has(img.id);
-                      return (
-                        <div
-                          key={img.id}
-                          onClick={() => toggleSelection(img.id)}
-                          className={`
-                            group relative aspect-square rounded-xl overflow-hidden cursor-pointer border-2 transition-all
-                            ${isSelected ? 'border-indigo-500' : 'border-transparent hover:border-white/30'}
-                          `}
+            <AnimatePresence>
+                {isOpen && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center"
+                        onClick={() => setIsOpen(false)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.95, y: 20 }}
+                            animate={{ scale: 1, y: 0 }}
+                            exit={{ scale: 0.95, y: 20 }}
+                            transition={{ duration: 0.2 }}
+                            className="bg-neutral-900 border border-neutral-700 rounded-2xl w-[90vw] h-[90vh] max-w-6xl flex flex-col overflow-hidden"
+                            onClick={(e) => e.stopPropagation()}
                         >
-                          <img
-                            src={img.url}
-                            alt="Generated"
-                            className="w-full h-full object-cover"
-                          />
-                           
-                          {/* Selection Overlay */}
-                          <div className={`
-                            absolute inset-0 bg-black/40 flex items-center justify-center transition-opacity
-                            ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}
-                          `}>
-                             {isSelected ? (
-                               <CheckCircle2 className="w-8 h-8 text-indigo-400 fill-indigo-950" />
-                             ) : (
-                               <div className="w-6 h-6 rounded-full border-2 border-white/50" />
-                             )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
+                            {/* Header */}
+                            <header className="p-4 border-b border-neutral-800 flex justify-between items-center flex-shrink-0">
+                                <h2 className="text-2xl font-bold text-neutral-100">{t('mediaLibrary.title')}</h2>
+                                <div className="flex items-center gap-4">
+                                    <button onClick={toggleSelectionMode} className="text-sm font-semibold text-neutral-300 bg-neutral-700/50 px-3 py-1 rounded-md hover:bg-neutral-700">
+                                        {selectionMode ? t('mediaLibrary.cancel') : t('mediaLibrary.select')}
+                                    </button>
+                                    {selectionMode ? (
+                                        <button onClick={handleDeleteSelected} disabled={selectedImages.length === 0} className="text-sm font-semibold text-white bg-red-600 px-3 py-1 rounded-md hover:bg-red-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                                            {t('mediaLibrary.deleteSelected')} ({selectedImages.length})
+                                        </button>
+                                    ) : (
+                                        <button onClick={handleDeleteAll} disabled={libraryImages.length === 0} className="text-sm font-semibold text-neutral-300 hover:text-red-400 disabled:opacity-50">
+                                            {t('mediaLibrary.deleteAll')}
+                                        </button>
+                                    )}
+                                    <button onClick={() => setIsOpen(false)} className="text-neutral-500 hover:text-white">
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                                    </button>
+                                </div>
+                            </header>
+
+                            {/* Body */}
+                            <div className="flex-grow p-4 overflow-y-auto">
+                                {libraryImages.length === 0 ? (
+                                    <div className="flex items-center justify-center h-full text-center text-neutral-500">
+                                        <p>{t('mediaLibrary.emptyMessage')}</p>
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                                        {libraryImages.map((imgUrl) => (
+                                            <div
+                                                key={imgUrl}
+                                                onClick={() => handleImageClick(imgUrl)}
+                                                className={cn(
+                                                    "relative group aspect-square rounded-lg overflow-hidden cursor-pointer transition-all duration-200",
+                                                    selectionMode ? "ring-2 ring-offset-2 ring-offset-neutral-900" : "hover:scale-105",
+                                                    selectedImages.includes(imgUrl) ? "ring-neutral-200" : "ring-transparent"
+                                                )}
+                                            >
+                                                <img src={imgUrl} className="w-full h-full object-cover" alt={`Library image`} />
+                                                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                {selectionMode && (
+                                                    <div className="absolute top-2 right-2 w-6 h-6 rounded-full border-2 border-white flex items-center justify-center bg-black/50">
+                                                        {selectedImages.includes(imgUrl) && (
+                                                            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}>
+                                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
+                                                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                                                </svg>
+                                                            </motion.div>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </motion.div>
+                    </motion.div>
                 )}
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-    </>
-  );
+            </AnimatePresence>
+        </>
+    );
 };
+
+export default MediaLibrary;

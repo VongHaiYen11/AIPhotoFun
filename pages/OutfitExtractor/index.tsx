@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { BackToTools } from '../../components/ui/BackToTools';
@@ -6,10 +6,12 @@ import { LanguageSwitcher } from '../../components/ui/LanguageSwitcher';
 import { ImageUpload } from '../../components/ui/ImageUpload';
 import { GoBackTools } from '../../components/ui/GoBackTools';
 import { extractOutfitFromImage } from '../../services/geminiServices';
+import { useMediaLibrary } from '../../contexts/MediaLibraryContext';
 import { Loader2, Download, RefreshCcw } from 'lucide-react';
 
 export const OutfitExtractor: React.FC = () => {
   const { t } = useTranslation();
+  const { addImageToLibrary } = useMediaLibrary();
 
   // State
   const [originalImage, setOriginalImage] = useState<string | undefined>();
@@ -25,7 +27,6 @@ export const OutfitExtractor: React.FC = () => {
     setRefineText('');
   };
 
-  // Handle generate outfit
   const handleGenerate = async () => {
     if (!originalImage) return;
 
@@ -36,6 +37,7 @@ export const OutfitExtractor: React.FC = () => {
       // Call the Gemini Service
       const url = await extractOutfitFromImage(originalImage, refineText);
       setExtractedImage(url);
+      addImageToLibrary(url);
     } catch (error) {
       console.error("Outfit extraction failed:", error);
       alert(t('outfitExtractor.extractionFailed'));
@@ -43,13 +45,6 @@ export const OutfitExtractor: React.FC = () => {
       setIsGenerating(false);
     }
   };
-
-  // Automatically trigger generate when originalImage changes
-  useEffect(() => {
-    if (originalImage) {
-      handleGenerate();
-    }
-  }, [originalImage]);
 
   const handleDownload = () => {
     if (!extractedImage) return;
@@ -146,7 +141,13 @@ export const OutfitExtractor: React.FC = () => {
                      </div>
                   ) : (
                      <div className="text-center px-6">
-                        <p className="text-white/30 text-sm mb-4">Ready to extract the look...</p>
+                        <p className="text-white/30 text-sm mb-4">Ready to extract the look?</p>
+                        <button
+                          onClick={handleGenerate}
+                          className="px-6 py-2 bg-white text-black rounded-lg font-bold text-sm hover:bg-white/90 transition"
+                        >
+                          Extract Outfit
+                        </button>
                      </div>
                   )}
                </div>

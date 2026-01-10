@@ -5,6 +5,7 @@ import { generateStyledImage, generateBackgroundFromConcept, extractOutfitFromIm
 import { BackToTools } from '../../components/ui/BackToTools';
 import { GoBackTools } from '../../components/ui/GoBackTools';
 import { LanguageSwitcher } from '../../components/ui/LanguageSwitcher';
+import { useMediaLibrary } from '../../contexts/MediaLibraryContext';
 import { Loader2, Download, Palette, Upload, X, RotateCcw } from 'lucide-react';
 
 type Step = 'UPLOAD' | 'STUDIO';
@@ -177,6 +178,7 @@ const ADULT_POSES = [
 
 export const ConceptStudio: React.FC = () => {
     const { t } = useTranslation();
+    const { addImageToLibrary } = useMediaLibrary();
     const [step, setStep] = useState<Step>('UPLOAD');
     
     // Uploaded images
@@ -305,6 +307,7 @@ After satisfying the identity preservation rule, perform the following compositi
                 ...prev,
                 [poseId]: { ...prev[poseId], status: 'done', url: resultUrl }
             }));
+            addImageToLibrary(resultUrl);
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : "Final image generation failed.";
             setGeneratedImages(prev => ({

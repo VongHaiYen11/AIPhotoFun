@@ -6,10 +6,12 @@ import { LanguageSwitcher } from '../../components/ui/LanguageSwitcher';
 import { ImageUpload } from '../../components/ui/ImageUpload';
 import { GoBackTools } from '../../components/ui/GoBackTools';
 import { fillMaskedImage } from '../../services/geminiServices';
+import { useMediaLibrary } from '../../contexts/MediaLibraryContext';
 import { Loader2, Download, Eraser, Brush, Trash2, PenTool } from 'lucide-react';
   
 export const Inpainter: React.FC = () => {
   const { t } = useTranslation();
+  const { addImageToLibrary } = useMediaLibrary();
 
   // State
   const [originalImage, setOriginalImage] = useState<string | undefined>();
@@ -165,6 +167,7 @@ export const Inpainter: React.FC = () => {
     try {
       const url = await fillMaskedImage(promptText, maskDataUrl);
       setResultImage(url);
+      addImageToLibrary(url);
     } catch (error) {
       console.error("Inpainting failed:", error);
       alert(t('inpainter.inpaintingFailed'));
