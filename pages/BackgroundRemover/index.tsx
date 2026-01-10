@@ -215,35 +215,45 @@ export const BackgroundRemover: React.FC = () => {
                   {/* Checkerboard Background for Transparency */}
                   <div className="absolute inset-0 opacity-20" style={checkerboardStyle} />
 
-                  {resultImage ? (
-                     <motion.img 
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        src={resultImage} 
-                        className="relative z-10 max-w-full max-h-[600px] object-contain rounded-lg shadow-2xl"
-                        alt="Result" 
-                     />
-                  ) : isProcessing ? (
-                     <div className="relative z-10 flex flex-col items-center gap-4 text-center">
-                        <div className="relative">
-                            <div className="w-16 h-16 border-4 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin" />
-                            <div className="absolute inset-0 flex items-center justify-center">
-                                <Eraser className="w-6 h-6 text-indigo-400 animate-pulse" />
+                  {/* Invisible Original to force height match */}
+                  <img 
+                      src={originalImage} 
+                      className="max-w-full max-h-[600px] object-contain opacity-0 pointer-events-none invisible" 
+                      alt="Spacer"
+                  />
+
+                  {/* Content Overlay */}
+                  <div className="absolute inset-0 flex items-center justify-center p-4">
+                    {resultImage ? (
+                        <motion.img 
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            src={resultImage} 
+                            className="relative z-10 max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+                            alt="Result" 
+                        />
+                    ) : isProcessing ? (
+                        <div className="relative z-10 flex flex-col items-center gap-4 text-center">
+                            <div className="relative">
+                                <div className="w-16 h-16 border-4 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin" />
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                    <Eraser className="w-6 h-6 text-indigo-400 animate-pulse" />
+                                </div>
+                            </div>
+                            <div>
+                                <p className="text-white font-semibold text-lg">{t('backgroundRemover.processing')}</p>
+                                <p className="text-white/40 text-sm">Analysing segmentation mask...</p>
                             </div>
                         </div>
-                        <div>
-                            <p className="text-white font-semibold text-lg">{t('backgroundRemover.processing')}</p>
-                            <p className="text-white/40 text-sm">Analysing segmentation mask...</p>
+                    ) : (
+                        <div className="relative z-10 text-center px-6 py-12 border-2 border-dashed border-white/10 rounded-xl bg-black/20">
+                            <MousePointerClick className="w-12 h-12 text-white/20 mx-auto mb-4" />
+                            <p className="text-white/40 font-medium">
+                                {t('backgroundRemover.instructions')}
+                            </p>
                         </div>
-                     </div>
-                  ) : (
-                     <div className="relative z-10 text-center px-6 py-12 border-2 border-dashed border-white/10 rounded-xl bg-black/20">
-                        <MousePointerClick className="w-12 h-12 text-white/20 mx-auto mb-4" />
-                        <p className="text-white/40 font-medium">
-                            {t('backgroundRemover.instructions')}
-                        </p>
-                     </div>
-                  )}
+                    )}
+                  </div>
                </div>
             </div>
           </div>

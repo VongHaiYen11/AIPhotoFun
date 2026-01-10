@@ -114,6 +114,7 @@ export const DepthEffect: React.FC = () => {
           <ImageUpload
             value={originalImage}
             onChange={setOriginalImage}
+            onRemove={() => setOriginalImage(undefined)}
             label={t('depthEffect.dropImage')}
             className="w-full h-80"
           />
