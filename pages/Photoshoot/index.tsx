@@ -707,6 +707,7 @@ export const Photoshoot: React.FC = () => {
                     key={result.id}
                     imageUrl={result.url}
                     name={result.pose}
+                    showRegenerate={true}
                     onRegenerate={() => handleGeneratePhotos(false)}
                   />
                 ))}

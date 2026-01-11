@@ -20,7 +20,7 @@ export const ImageResultHolder: React.FC<ImageResultHolderProps> = ({
   name,
   color,
   showDownload = true,
-  showRegenerate = true,
+  showRegenerate = false,
   onRegenerate,
   width,
 }) => {

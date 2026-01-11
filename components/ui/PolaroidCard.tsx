@@ -17,7 +17,7 @@ export const PolaroidCard: React.FC<PolaroidCardProps> = ({
   imageUrl,
   name,
   showDownload = true,
-  showRegenerate = true,
+  showRegenerate = false,
   onRegenerate,
   width,
 }) => {
