@@ -1,28 +1,29 @@
+
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useMediaLibrary } from '../../contexts/MediaLibraryContext';
 import { cn } from '../../lib/utils';
-import { Download } from 'lucide-react';
+import { Download, Loader2 } from 'lucide-react';
 
 export const MediaLibrary: React.FC = () => {
     const { t } = useTranslation();
-    const { libraryImages, removeImagesFromLibrary, clearLibrary, selectImageForTool } = useMediaLibrary();
+    const { libraryImages, isLoading, removeImagesFromLibrary, clearLibrary, selectImageForTool } = useMediaLibrary();
     const [isOpen, setIsOpen] = useState(false);
     const [selectionMode, setSelectionMode] = useState(false);
-    const [selectedImages, setSelectedImages] = useState<string[]>([]);
+    const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-    const toggleImageSelection = (imageUrl: string) => {
-        setSelectedImages(prev =>
-            prev.includes(imageUrl)
-                ? prev.filter(img => img !== imageUrl)
-                : [...prev, imageUrl]
+    const toggleImageSelection = (id: string) => {
+        setSelectedIds(prev =>
+            prev.includes(id)
+                ? prev.filter(itemId => itemId !== id)
+                : [...prev, id]
         );
     };
 
-    const handleImageClick = (imageUrl: string) => {
+    const handleImageClick = (imageUrl: string, id: string) => {
         if (selectionMode) {
-            toggleImageSelection(imageUrl);
+            toggleImageSelection(id);
         } else {
             selectImageForTool(imageUrl);
             setIsOpen(false);
@@ -41,8 +42,8 @@ export const MediaLibrary: React.FC = () => {
 
     const handleDeleteSelected = () => {
         if (window.confirm(t('mediaLibrary.confirmDeleteSelected'))) {
-            removeImagesFromLibrary(selectedImages);
-            setSelectedImages([]);
+            removeImagesFromLibrary(selectedIds);
+            setSelectedIds([]);
             setSelectionMode(false);
         }
     };
@@ -50,14 +51,14 @@ export const MediaLibrary: React.FC = () => {
     const handleDeleteAll = () => {
         if (window.confirm(t('mediaLibrary.confirmDeleteAll'))) {
             clearLibrary();
-            setSelectedImages([]);
+            setSelectedIds([]);
             setSelectionMode(false);
         }
     };
 
     const toggleSelectionMode = () => {
         setSelectionMode(!selectionMode);
-        setSelectedImages([]);
+        setSelectedIds([]);
     };
 
     return (
@@ -99,8 +100,8 @@ export const MediaLibrary: React.FC = () => {
                                         {selectionMode ? t('mediaLibrary.cancel') : t('mediaLibrary.select')}
                                     </button>
                                     {selectionMode ? (
-                                        <button onClick={handleDeleteSelected} disabled={selectedImages.length === 0} className="text-sm font-semibold text-white bg-red-600 px-3 py-1 rounded-md hover:bg-red-500 disabled:opacity-50 disabled:cursor-not-allowed">
-                                            {t('mediaLibrary.deleteSelected')} ({selectedImages.length})
+                                        <button onClick={handleDeleteSelected} disabled={selectedIds.length === 0} className="text-sm font-semibold text-white bg-red-600 px-3 py-1 rounded-md hover:bg-red-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                                            {t('mediaLibrary.deleteSelected')} ({selectedIds.length})
                                         </button>
                                     ) : (
                                         <button onClick={handleDeleteAll} disabled={libraryImages.length === 0} className="text-sm font-semibold text-neutral-300 hover:text-red-400 disabled:opacity-50">
@@ -115,29 +116,34 @@ export const MediaLibrary: React.FC = () => {
 
                             {/* Body */}
                             <div className="flex-grow p-4 overflow-y-auto">
-                                {libraryImages.length === 0 ? (
+                                {isLoading ? (
+                                    <div className="flex flex-col items-center justify-center h-full text-neutral-500 gap-3">
+                                        <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
+                                        <p>Syncing...</p>
+                                    </div>
+                                ) : libraryImages.length === 0 ? (
                                     <div className="flex items-center justify-center h-full text-center text-neutral-500">
                                         <p>{t('mediaLibrary.emptyMessage')}</p>
                                     </div>
                                 ) : (
                                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-                                        {libraryImages.map((imgUrl) => (
+                                        {libraryImages.map((asset) => (
                                             <div
-                                                key={imgUrl}
-                                                onClick={() => handleImageClick(imgUrl)}
+                                                key={asset.id}
+                                                onClick={() => handleImageClick(asset.public_url, asset.id)}
                                                 className={cn(
                                                     "relative group aspect-square rounded-lg overflow-hidden cursor-pointer transition-all duration-200",
                                                     selectionMode ? "ring-2 ring-offset-2 ring-offset-neutral-900" : "hover:scale-105",
-                                                    selectedImages.includes(imgUrl) ? "ring-neutral-200" : "ring-transparent"
+                                                    selectedIds.includes(asset.id) ? "ring-neutral-200" : "ring-transparent"
                                                 )}
                                             >
-                                                <img src={imgUrl} className="w-full h-full object-cover" alt={`Library image`} />
+                                                <img src={asset.public_url} className="w-full h-full object-cover" alt={`Library image`} loading="lazy" />
                                                 
                                                 {/* Hover Overlay */}
                                                 <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                                                     {!selectionMode && (
                                                         <button 
-                                                            onClick={(e) => handleDownload(e, imgUrl)}
+                                                            onClick={(e) => handleDownload(e, asset.public_url)}
                                                             className="p-2 bg-white/20 hover:bg-white/40 rounded-full text-white transition-colors"
                                                             title={t('common.download')}
                                                         >
@@ -149,7 +155,7 @@ export const MediaLibrary: React.FC = () => {
                                                 {/* Selection Checkbox */}
                                                 {selectionMode && (
                                                     <div className="absolute top-2 right-2 w-6 h-6 rounded-full border-2 border-white flex items-center justify-center bg-black/50">
-                                                        {selectedImages.includes(imgUrl) && (
+                                                        {selectedIds.includes(asset.id) && (
                                                             <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}>
                                                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
                                                                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />

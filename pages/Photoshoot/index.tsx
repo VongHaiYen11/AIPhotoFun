@@ -212,10 +212,10 @@ export const Photoshoot: React.FC = () => {
 
     // Process poses
     for (const poseKey of selectedPoses) {
-      const poseName = t(poseKey); // e.g. "Smiling Portrait"
-      const angleName = t(selectedCameraAngle || '');
-      const gradeName = t(selectedColorGrade || '');
-      const sizeName = t(selectedSize || '');
+      const poseName = t(`photoshoot.${poseKey}`); // e.g. "Smiling Portrait"
+      const angleName = t(`photoshoot.${selectedCameraAngle}` || '');
+      const gradeName = t(`photoshoot.${selectedColorGrade}` || '');
+      const sizeName = t(`photoshoot.${selectedSize}` || '');
 
       const fullPrompt = `
         Create a photorealistic photo based on the following:

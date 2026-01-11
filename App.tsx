@@ -1,7 +1,9 @@
-import React from 'react';
+
+import React, { useEffect } from 'react';
 import { HashRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { LanguageSwitcher } from './components/ui/LanguageSwitcher';
 import { MediaLibrary } from './components/ui/MediaLibrary';
+import { supabase } from './lib/supabase';
 
 import { Home } from './pages/Home/index';
 import { Photoshoot } from './pages/Photoshoot/index';
@@ -22,6 +24,49 @@ import { Inpainter } from './pages/Inpainter/index';
 const AppContent: React.FC = () => {
   const location = useLocation();
   const isHome = location.pathname === '/';
+
+  useEffect(() => {
+    const checkUser = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session) {
+          console.log("Chào mừng trở lại! ID của bạn là:", session.user.id);
+        } else {
+          console.log("Đang kiểm tra quyền tạo ID ẩn danh...");
+          const { data, error } = await supabase.auth.signInAnonymously();
+          
+          if (error) {
+            if (error.message.includes("Anonymous sign-ins are disabled")) {
+              console.warn(
+                "⚠️ Anonymous sign-ins are disabled in your Supabase project.\n" +
+                "To fix this, go to: https://supabase.com/dashboard/project/lyhzsxokbnkxlxfdbuon/auth/providers\n" +
+                "and enable 'Anonymous' under the Auth Providers section."
+              );
+              
+              // Fallback to a local guest ID if Auth is disabled in dashboard
+              let localId = localStorage.getItem('guest_id');
+              if (!localId) {
+                localId = 'guest_' + crypto.randomUUID();
+                localStorage.setItem('guest_id', localId);
+              }
+              console.log("Sử dụng ID khách tạm thời (Local Storage):", localId);
+            } else {
+              throw error;
+            }
+          } else if (data.user) {
+            console.log("Đã tạo ID ẩn danh thành công:", data.user.id);
+            // Sync with profiles table if needed:
+            // await supabase.from('profiles').upsert({ id: data.user.id, is_anonymous: true });
+          }
+        }
+      } catch (err) {
+        console.error("Lỗi xác thực người dùng:", err);
+      }
+    };
+
+    checkUser();
+  }, []);
 
   return (
     <div className="min-h-screen w-full flex flex-col items-center bg-black relative overflow-x-hidden">
