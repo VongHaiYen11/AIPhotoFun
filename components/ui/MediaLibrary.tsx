@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useMediaLibrary } from '../../contexts/MediaLibraryContext';
 import { cn } from '../../lib/utils';
-import { Download, Loader2 } from 'lucide-react';
+import { Download, Loader2, Trash2, Check, X } from 'lucide-react';
 
 export const MediaLibrary: React.FC = () => {
     const { t } = useTranslation();
@@ -12,6 +12,9 @@ export const MediaLibrary: React.FC = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [selectionMode, setSelectionMode] = useState(false);
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
+    
+    // State to handle custom confirmation instead of window.confirm
+    const [confirmAction, setConfirmAction] = useState<'none' | 'selected' | 'all'>('none');
 
     const toggleImageSelection = (id: string) => {
         setSelectedIds(prev =>
@@ -40,25 +43,27 @@ export const MediaLibrary: React.FC = () => {
         document.body.removeChild(link);
     };
 
-    const handleDeleteSelected = () => {
-        if (window.confirm(t('mediaLibrary.confirmDeleteSelected'))) {
+    const executeConfirmation = () => {
+        if (confirmAction === 'selected') {
             removeImagesFromLibrary(selectedIds);
             setSelectedIds([]);
             setSelectionMode(false);
-        }
-    };
-
-    const handleDeleteAll = () => {
-        if (window.confirm(t('mediaLibrary.confirmDeleteAll'))) {
+        } else if (confirmAction === 'all') {
             clearLibrary();
             setSelectedIds([]);
             setSelectionMode(false);
         }
+        setConfirmAction('none');
+    };
+
+    const cancelConfirmation = () => {
+        setConfirmAction('none');
     };
 
     const toggleSelectionMode = () => {
         setSelectionMode(!selectionMode);
         setSelectedIds([]);
+        setConfirmAction('none');
     };
 
     return (
@@ -96,20 +101,54 @@ export const MediaLibrary: React.FC = () => {
                             <header className="p-4 border-b border-neutral-800 flex justify-between items-center flex-shrink-0">
                                 <h2 className="text-2xl font-bold text-neutral-100">{t('mediaLibrary.title')}</h2>
                                 <div className="flex items-center gap-4">
-                                    <button onClick={toggleSelectionMode} className="text-sm font-semibold text-neutral-300 bg-neutral-700/50 px-3 py-1 rounded-md hover:bg-neutral-700">
-                                        {selectionMode ? t('mediaLibrary.cancel') : t('mediaLibrary.select')}
-                                    </button>
-                                    {selectionMode ? (
-                                        <button onClick={handleDeleteSelected} disabled={selectedIds.length === 0} className="text-sm font-semibold text-white bg-red-600 px-3 py-1 rounded-md hover:bg-red-500 disabled:opacity-50 disabled:cursor-not-allowed">
-                                            {t('mediaLibrary.deleteSelected')} ({selectedIds.length})
-                                        </button>
+                                    {confirmAction !== 'none' ? (
+                                        // Confirmation UI
+                                        <div className="flex items-center gap-2 bg-red-500/10 px-3 py-1 rounded-lg border border-red-500/20">
+                                            <span className="text-sm font-bold text-red-400 mr-2">
+                                                {confirmAction === 'selected' ? t('mediaLibrary.confirmDeleteSelected') : t('mediaLibrary.confirmDeleteAll')}
+                                            </span>
+                                            <button 
+                                                onClick={executeConfirmation}
+                                                className="flex items-center gap-1 text-xs font-bold text-white bg-red-600 px-3 py-1.5 rounded-md hover:bg-red-500 transition-colors"
+                                            >
+                                                <Check className="w-3 h-3" /> Yes
+                                            </button>
+                                            <button 
+                                                onClick={cancelConfirmation}
+                                                className="flex items-center gap-1 text-xs font-bold text-neutral-300 bg-neutral-700 px-3 py-1.5 rounded-md hover:bg-neutral-600 transition-colors"
+                                            >
+                                                <X className="w-3 h-3" /> No
+                                            </button>
+                                        </div>
                                     ) : (
-                                        <button onClick={handleDeleteAll} disabled={libraryImages.length === 0} className="text-sm font-semibold text-neutral-300 hover:text-red-400 disabled:opacity-50">
-                                            {t('mediaLibrary.deleteAll')}
-                                        </button>
+                                        // Default Actions
+                                        <>
+                                            <button onClick={toggleSelectionMode} className="text-sm font-semibold text-neutral-300 bg-neutral-700/50 px-3 py-1 rounded-md hover:bg-neutral-700">
+                                                {selectionMode ? t('mediaLibrary.cancel') : t('mediaLibrary.select')}
+                                            </button>
+                                            {selectionMode ? (
+                                                <button 
+                                                    onClick={() => setConfirmAction('selected')} 
+                                                    disabled={selectedIds.length === 0} 
+                                                    className="flex items-center gap-2 text-sm font-semibold text-white bg-red-600 px-3 py-1 rounded-md hover:bg-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                    {t('mediaLibrary.deleteSelected')} ({selectedIds.length})
+                                                </button>
+                                            ) : (
+                                                <button 
+                                                    onClick={() => setConfirmAction('all')} 
+                                                    disabled={libraryImages.length === 0} 
+                                                    className="text-sm font-semibold text-neutral-300 hover:text-red-400 disabled:opacity-50"
+                                                >
+                                                    {t('mediaLibrary.deleteAll')}
+                                                </button>
+                                            )}
+                                        </>
                                     )}
-                                    <button onClick={() => setIsOpen(false)} className="text-neutral-500 hover:text-white">
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                                    
+                                    <button onClick={() => setIsOpen(false)} className="text-neutral-500 hover:text-white ml-4">
+                                        <X className="w-6 h-6" />
                                     </button>
                                 </div>
                             </header>
@@ -154,12 +193,10 @@ export const MediaLibrary: React.FC = () => {
 
                                                 {/* Selection Checkbox */}
                                                 {selectionMode && (
-                                                    <div className="absolute top-2 right-2 w-6 h-6 rounded-full border-2 border-white flex items-center justify-center bg-black/50">
+                                                    <div className={`absolute top-2 right-2 w-6 h-6 rounded-full border-2 flex items-center justify-center ${selectedIds.includes(asset.id) ? 'bg-indigo-500 border-indigo-500' : 'bg-black/50 border-white'}`}>
                                                         {selectedIds.includes(asset.id) && (
                                                             <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}>
-                                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
-                                                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                                                </svg>
+                                                                <Check className="w-4 h-4 text-white" />
                                                             </motion.div>
                                                         )}
                                                     </div>

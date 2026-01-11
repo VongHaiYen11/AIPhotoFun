@@ -1,4 +1,5 @@
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 
 export interface GeneratedResult {
   id: string;
@@ -10,7 +11,23 @@ export const usePhotoshoot = () => {
   const [status, setStatus] = useState<boolean>(true);
   const [currentImage, setCurrentImage] = useState<string | undefined>();
   const [AIDesignerPrompt, setAIDesignerPrompt] = useState<string>('');
-  const [modelLibrary, setModelLibrary] = useState<string[]>([]);
+  
+  // Initialize modelLibrary from localStorage to persist user models
+  const [modelLibrary, setModelLibrary] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('photoshoot_model_library');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      console.error("Failed to load model library", e);
+      return [];
+    }
+  });
+
+  // Persist modelLibrary changes
+  useEffect(() => {
+    localStorage.setItem('photoshoot_model_library', JSON.stringify(modelLibrary));
+  }, [modelLibrary]);
+
   const [mode, setMode] = useState<'Upload' | 'Generate'>('Upload');
   const [openStep, setOpenStep] = useState<number | null>(2);
   const toggleStep = (step: number) => setOpenStep(prev => (prev === step ? null : step));

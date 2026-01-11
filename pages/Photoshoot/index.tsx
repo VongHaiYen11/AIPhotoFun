@@ -17,6 +17,7 @@ import { X, Loader2 } from 'lucide-react';
 import { usePhotoshoot } from './usePhotoshoot';
 import { generateImageFromPrompt, generateStyledImage } from '../../services/geminiServices';
 import { useMediaLibrary } from '../../contexts/MediaLibraryContext';
+import { downloadAsZip } from '../../lib/utils';
 
 export const Photoshoot: React.FC = () => {
   const { t } = useTranslation();
@@ -149,7 +150,8 @@ export const Photoshoot: React.FC = () => {
 
     // Images
     setCurrentImage(undefined);
-    setModelLibrary([]);
+    // Don't reset modelLibrary as it is persistent now
+    // setModelLibrary([]); 
 
     // Step 2 – Assets
     setOutfitImage(undefined);
@@ -180,6 +182,9 @@ export const Photoshoot: React.FC = () => {
       setModelLibrary(prev => [...prev, url]);
       setMode('Upload'); // Switch back to see the image in the main uploader
       
+      // Save to global media library
+      await addImageToLibrary(url, 'generated');
+
       // Log model generation
       await logGenerationActivity('AI Model Gen', {
           prompt: AIDesignerPrompt
@@ -193,8 +198,11 @@ export const Photoshoot: React.FC = () => {
     }
   };
 
-  const handleGeneratePhotos = async () => {
+  const handleGeneratePhotos = async (isRefinement: boolean | React.MouseEvent = false) => {
     if (!currentImage || selectedPoses.length === 0) return;
+
+    // Determine if we are strictly in refinement mode (boolean true passed explicitly)
+    const applyRefinement = isRefinement === true;
 
     setStatus(false); // Switch to result view
     setIsGeneratingPhotos(true);
@@ -235,7 +243,10 @@ export const Photoshoot: React.FC = () => {
       `;
 
       try {
-        const url = await generateStyledImage(fullPrompt, imageInputs);
+        // Pass refinement instruction if applicable
+        const additionalInstructions = applyRefinement && refineText ? refineText : undefined;
+
+        const url = await generateStyledImage(fullPrompt, imageInputs, additionalInstructions);
         setGeneratedResults(prev => [...prev, {
           id: crypto.randomUUID(),
           url,
@@ -251,7 +262,8 @@ export const Photoshoot: React.FC = () => {
             aspectRatio: selectedSize,
             hasOutfit: !!outfitImage,
             hasObject: !!objectImage,
-            hasBackground: !!backgroundImage
+            hasBackground: !!backgroundImage,
+            refinement: additionalInstructions
         });
 
       } catch (error) {
@@ -260,6 +272,15 @@ export const Photoshoot: React.FC = () => {
     }
     
     setIsGeneratingPhotos(false);
+  };
+
+  const handleDownloadAll = () => {
+    if (generatedResults.length === 0) return;
+    const imagesToDownload = generatedResults.map(res => ({
+        url: res.url,
+        name: res.pose
+    }));
+    downloadAsZip(imagesToDownload, `photoshoot-results-${Date.now()}.zip`);
   };
 
   return (
@@ -668,7 +689,7 @@ export const Photoshoot: React.FC = () => {
                     disabled:cursor-not-allowed
                   "
                   disabled={selectedPoses.length === 0}
-                  onClick={handleGeneratePhotos}
+                  onClick={() => handleGeneratePhotos(false)}
                 >
                   {`${t(`photoshoot.generateButton`)} (${selectedPoses.length})`}
                 </button>
@@ -715,10 +736,7 @@ export const Photoshoot: React.FC = () => {
               value={refineText}
               width={500}
               onChange={setRefineText}
-              onApplyAll={() => {
-                console.log('Apply instruction:', refineText);
-                // Future: Implement refinement logic
-              }}
+              onApplyAll={() => handleGeneratePhotos(true)}
             />
             <div className="flex items-center gap-4">
               {/* Download All (Simulated) */}
@@ -734,6 +752,7 @@ export const Photoshoot: React.FC = () => {
                   disabled:cursor-not-allowed
                 "
                 disabled={generatedResults.length === 0 || isGeneratingPhotos}
+                onClick={handleDownloadAll}
               >
                 {t(`photoshoot.downloadAllButton`)}
               </button>

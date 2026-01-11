@@ -1,3 +1,6 @@
+
+import JSZip from 'jszip';
+
 /**
  * Utility function to merge class names conditionally (similar to clsx/classnames)
  */
@@ -101,4 +104,44 @@ export async function resizeImage(
         
         img.src = imageDataUrl;
     });
+}
+
+/**
+ * Downloads multiple images as a ZIP file
+ * @param images - Array of objects with url and name
+ * @param zipFilename - Name of the zip file to download
+ */
+export async function downloadAsZip(images: { url: string; name: string }[], zipFilename: string) {
+  const zip = new JSZip();
+  
+  const promises = images.map(async (img, index) => {
+    try {
+      const response = await fetch(img.url);
+      const blob = await response.blob();
+      // Sanitize name and ensure extension
+      let safeName = img.name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+      if (!safeName.endsWith('.png') && !safeName.endsWith('.jpg') && !safeName.endsWith('.jpeg')) {
+          safeName += '.png'; 
+      }
+      // Avoid collisions by prepending index
+      safeName = `${index + 1}_${safeName}`;
+      
+      zip.file(safeName, blob);
+    } catch (e) {
+      console.error(`Failed to add ${img.name} to zip`, e);
+    }
+  });
+
+  await Promise.all(promises);
+
+  const content = await zip.generateAsync({ type: "blob" });
+  
+  const url = window.URL.createObjectURL(content);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = zipFilename.endsWith('.zip') ? zipFilename : `${zipFilename}.zip`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  window.URL.revokeObjectURL(url);
 }

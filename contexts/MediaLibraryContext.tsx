@@ -187,16 +187,22 @@ export const MediaLibraryProvider: React.FC<{ children: ReactNode }> = ({ childr
     };
 
     const removeImagesFromLibrary = async (ids: string[]) => {
+        if (!ids.length) return;
+
         try {
             // Find assets to delete to get their storage paths
             const assetsToDelete = libraryImages.filter(img => ids.includes(img.id));
-            const storagePaths = assetsToDelete.map(img => img.storage_path).filter(Boolean);
+            
+            // Get storage paths, ensure they are strings
+            const storagePaths = assetsToDelete
+                .map(img => img.storage_path)
+                .filter((path): path is string => !!path);
 
-            // Optimistic update
+            // Optimistic update: Remove from UI immediately
             const originalImages = [...libraryImages];
             setLibraryImages(prev => prev.filter(img => !ids.includes(img.id)));
 
-            // 1. Delete from DB
+            // 1. Delete rows from 'assets' table in Supabase
             const { error: dbError } = await supabase
                 .from('assets')
                 .delete()
@@ -204,11 +210,13 @@ export const MediaLibraryProvider: React.FC<{ children: ReactNode }> = ({ childr
 
             if (dbError) {
                 console.error('Error removing images from DB:', dbError);
-                setLibraryImages(originalImages); // Revert on error
+                // Revert UI state if DB deletion fails
+                setLibraryImages(originalImages); 
+                alert("Failed to delete images from database.");
                 return;
             }
 
-            // 2. Delete from Storage (fire and forget or await)
+            // 2. Delete files from Supabase Storage (if there are paths to delete)
             if (storagePaths.length > 0) {
                 const { error: storageError } = await supabase.storage
                     .from('images')
@@ -216,12 +224,13 @@ export const MediaLibraryProvider: React.FC<{ children: ReactNode }> = ({ childr
                 
                 if (storageError) {
                     console.error('Error removing files from Storage:', storageError);
-                    // We don't revert DB deletion if storage fails, just log it.
                 }
             }
 
         } catch (err: any) {
             console.error('Error in removeImagesFromLibrary:', err.message || err);
+            // Refresh library to ensure sync with server state
+            fetchAssets();
         }
     };
 
@@ -236,7 +245,7 @@ export const MediaLibraryProvider: React.FC<{ children: ReactNode }> = ({ childr
                 .select('storage_path')
                 .eq('user_id', session.user.id);
             
-            const storagePaths = userAssets?.map(a => a.storage_path).filter(Boolean) || [];
+            const storagePaths = userAssets?.map(a => a.storage_path).filter((p): p is string => !!p) || [];
 
             setLibraryImages([]); // Optimistic clear
 
@@ -250,8 +259,6 @@ export const MediaLibraryProvider: React.FC<{ children: ReactNode }> = ({ childr
 
             // 2. Delete from Storage
             if (storagePaths.length > 0) {
-                // Supabase storage remove has a limit on files? Usually fine for batches.
-                // We'll try to remove them.
                 await supabase.storage.from('images').remove(storagePaths);
             }
 

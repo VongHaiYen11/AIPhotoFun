@@ -14,6 +14,7 @@ import { useApparelMockupStudio } from './useApparelMockupStudio';
 import { generateGraphicFromPrompt, generateApparelMockup, generateProductMockup } from '../../services/geminiServices';
 import { useMediaLibrary } from '../../contexts/MediaLibraryContext';
 import { Loader2 } from 'lucide-react';
+import { downloadAsZip } from '../../lib/utils';
 
 
 export const ApparelMockupStudio: React.FC = () => {
@@ -138,6 +139,10 @@ export const ApparelMockupStudio: React.FC = () => {
     }
   };
 
+  const handleDownloadAll = () => {
+    if (generatedResults.length === 0) return;
+    downloadAsZip(generatedResults, `apparel-mockups-${Date.now()}.zip`);
+  };
 
   return (
     <div className="w-full max-w-7xl px-6 md:px-12 py-12 flex flex-col items-center text-white">
@@ -282,7 +287,7 @@ export const ApparelMockupStudio: React.FC = () => {
             )}
           </div>
           <div className="flex items-center gap-4 mt-8">
-            <button className="px-6 py-3 bg-white text-black rounded-lg font-semibold hover:bg-white/90 disabled:opacity-50" disabled={generatedResults.length === 0}>{t(`common.downloadAll`)}</button>
+            <button className="px-6 py-3 bg-white text-black rounded-lg font-semibold hover:bg-white/90 disabled:opacity-50" disabled={generatedResults.length === 0} onClick={handleDownloadAll}>{t(`common.downloadAll`)}</button>
             <button className="px-6 py-3 border border-white/20 rounded-lg text-white/70 font-semibold hover:bg-white/10" onClick={resetAll}>{t('common.startOver')}</button>
           </div>
         </div>
