@@ -358,7 +358,7 @@ Your secondary task is to transfer the pose from the second image (the 'referenc
             </div>
 
             {/* Actions */}
-            <div className="flex flex-col sm:flex-row items-center gap-4">
+            <div className="flex flex-col sm:flex-row items-center gap-8">
                 <button
                     onClick={handleDownload}
                     disabled={!generatedImage || isLoading}
@@ -369,7 +369,7 @@ Your secondary task is to transfer the pose from the second image (the 'referenc
                 </button>
                 <button
                     onClick={handleStartOver}
-                    className="font-bold text-center text-white/40 hover:text-white transition-colors"
+                    className="font-bold text-center text-white/40 hover:text-white transition-colors py-3 px-6"
                 >
                     {t('common.startOver')}
                 </button>
