@@ -5,6 +5,8 @@ interface ImageResultHolderProps {
   imageUrl: string;
   name: string;
 
+  color?: string; // optional màu hex hoặc rgb
+
   showDownload?: boolean;
   showRegenerate?: boolean;
 
@@ -16,6 +18,7 @@ interface ImageResultHolderProps {
 export const ImageResultHolder: React.FC<ImageResultHolderProps> = ({
   imageUrl,
   name,
+  color,
   showDownload = true,
   showRegenerate = true,
   onRegenerate,
@@ -48,20 +51,27 @@ export const ImageResultHolder: React.FC<ImageResultHolderProps> = ({
       className="
         relative
         w-full
-        p-4
       "
     >
-      {/* TITLE */}
-      <h3 className="text-lg mb-2 font-semibold text-white/90 text-center">
-        {name}
-      </h3>
+      {/* TITLE + OPTIONAL COLOR SWATCH */}
+      <div className="flex items-center justify-center gap-2 mb-2">
+        {color && (
+          <div
+            className="w-4 h-4 rounded-sm border border-white/20"
+            style={{ backgroundColor: color }}
+          />
+        )}
+        <h3 className="text-lg font-semibold text-white/90 text-center">
+          {name}
+        </h3>
+      </div>
 
       {/* IMAGE HOLDER */}
       <div
         className="
           relative
           w-full
-          aspect-[3/4]
+          h-[400px]
           bg-black
           border
           border-white/20
@@ -117,7 +127,7 @@ export const ImageResultHolder: React.FC<ImageResultHolderProps> = ({
           className="
             w-full
             h-full
-            object-cover
+            object-contain
             rounded-xl
           "
         />

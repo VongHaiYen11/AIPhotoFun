@@ -181,7 +181,7 @@ export const TypographicIllustrator: React.FC = () => {
           {/* ILLUSTRATION */}
           <div
             className="
-              w-full
+              w-[400px]
               rounded-2xl
               border border-white/20
               bg-white/5

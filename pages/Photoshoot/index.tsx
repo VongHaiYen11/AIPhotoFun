@@ -707,13 +707,14 @@ export const Photoshoot: React.FC = () => {
                     key={result.id}
                     imageUrl={result.url}
                     name={result.pose}
+                    onRegenerate={() => handleGeneratePhotos(false)}
                   />
                 ))}
                 {isGeneratingPhotos && (
                    <div className="flex flex-col items-center justify-center p-12 bg-white/5 border border-white/10 rounded-2xl animate-pulse">
                       <Loader2 className="w-10 h-10 text-indigo-400 animate-spin mb-4" />
                       <span className="text-white/60 font-semibold">{t('photoshoot.generatingButton')}</span>
-                      <span className="text-white/40 text-sm mt-2">Processing remaining poses...</span>
+                      <span className="text-white/40 text-sm mt-2">{t('common.processingRemaining')}</span>
                    </div>
                 )}
               </div>
@@ -723,10 +724,10 @@ export const Photoshoot: React.FC = () => {
                     <>
                       <Loader2 className="w-16 h-16 text-indigo-400 animate-spin mb-6" />
                       <h2 className="text-2xl font-bold">{t('photoshoot.generatingButton')}</h2>
-                      <p className="text-white/50 mt-2">Generating your photos, this might take a moment...</p>
+                      <p className="text-white/50 mt-2">{t('common.generatingInProgress')}</p>
                     </>
                   ) : (
-                    <p className="text-white/50">No images generated.</p>
+                    <p className="text-white/50">{t('common.noImageGenerated')}</p>
                   )}
                </div>
             )}

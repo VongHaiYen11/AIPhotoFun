@@ -47,6 +47,7 @@ const resources = {
       download: 'Download',
       downloadAll: 'Download All',
       regenerate: 'Regenerate',
+      generating: 'Generating...',
       retry: 'Retry',
       nextStep: 'Next Step',
       poweredByGemini: 'Powered by Gemini 2.5 Flash Image Preview',
@@ -56,7 +57,10 @@ const resources = {
       refineWarning: 'Refinements will be applied to all images (if any).',
       refinePlaceholder: 'Optional: Add instructions to refine the result (be specific!).',
       addImage: 'Add Image',
-      optional: 'Optional'
+      optional: 'Optional',
+      processingRemaining: 'Processing remaining poses...',
+      generatingInProgress: 'Generating your photos, this might take a moment...',
+      noImageGenerated: 'No images generated.',
     },
     mediaLibrary: {
       title: 'Media Library',
@@ -302,6 +306,7 @@ const resources = {
         removalFailed: 'Removal Failed',
         instructions: 'Once your image is loaded, click on the main subject to remove the background.',
         result: 'Result',
+        analyzing: 'Analyzing...'
     },
     portraitGenerator: {
       subtitle: 'Create professional ID photos from any picture.',
@@ -539,6 +544,7 @@ const resources = {
       start: 'Bắt đầu',
     },
     common: {
+      generating: 'Đang tạo hình ảnh...',
       welcome: 'Xin chào!',
       backToTools: 'Trở lại Công cụ',
       goBack: 'Quay lại',
@@ -555,7 +561,10 @@ const resources = {
       refineWarning: 'Việc tinh chỉnh sẽ được áp dụng lên tất cả ảnh (nếu có).',
       refinePlaceholder: 'Tùy chọn: Thêm hướng dẫn để tinh chỉnh kết quả (đưa ra các yêu cầu cụ thể!).',
       addImage: 'Thêm ảnh',
-      optional: 'Tùy chọn'
+      optional: 'Tùy chọn',
+      processingRemaining: 'Xử lí các ảnh còn lại...',
+      generatingInProgress: 'Đang tạo ảnh cho bạn, vui lòng chờ đợi...',
+      noImageGenerated: 'Không ảnh nào được tạo.',
     },
     mediaLibrary: {
       title: 'Thư viện Media',
@@ -627,6 +636,13 @@ const resources = {
         dutchAngle: 'Góc nghiêng',
         wormsEyeView: 'Từ dưới lên',
         birdsEyeView: 'Từ trên xuống',
+      },
+      imageSize: {
+        "1_1": "1:1",
+        "9_16": "9:16",
+        "16_9": "16:9",
+        "4_3": "4:3",
+        "3_4": "3:4"
       },
       grades: {
         none: 'Không có',
@@ -800,6 +816,7 @@ const resources = {
         removalFailed: 'Xóa thất bại',
         instructions: 'Sau khi ảnh của bạn được tải lên, hãy nhấp vào đối tượng chính để xóa nền.',
         result: 'Kết quả',
+        analyzing: 'Đang phân tích...'
     },
     portraitGenerator: {
       subtitle: 'Tạo ảnh thẻ chuyên nghiệp từ bất kỳ bức ảnh nào.',

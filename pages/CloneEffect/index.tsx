@@ -28,6 +28,13 @@ export const CloneEffect: React.FC = () => {
     }
   }, [selectedImageForTool, clearSelectedImageForTool]);
 
+  useEffect(() => {
+    if (originalImage) {
+      handleGenerate();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [originalImage]);
+
   // Reset
   const resetAll = () => {
     setOriginalImage(undefined);
@@ -147,19 +154,9 @@ export const CloneEffect: React.FC = () => {
                   ) : isGenerating ? (
                      <div className="flex flex-col items-center gap-3">
                         <Loader2 className="w-10 h-10 text-indigo-400 animate-spin" />
-                        <span className="text-white/50 font-medium">Generating clones...</span>
+                        <span className="text-white/50 font-medium">{t('common.generating')} </span>
                      </div>
-                  ) : (
-                     <div className="text-center px-6">
-                        <p className="text-white/30 text-sm mb-4">Ready to create magic?</p>
-                        <button
-                          onClick={handleGenerate}
-                          className="px-6 py-2 bg-white text-black rounded-lg font-bold text-sm hover:bg-white/90 transition"
-                        >
-                          Generate Illustration
-                        </button>
-                     </div>
-                  )}
+                  ) : null}
                </div>
             </div>
           </div>
@@ -210,7 +207,7 @@ export const CloneEffect: React.FC = () => {
                 "
              >
                 <RefreshCcw className={`w-4 h-4 ${isGenerating ? 'animate-spin' : ''}`} />
-                {generatedImage ? t('common.regenerate') : "Generate"}
+                {t('common.regenerate')}
              </button>
           </div>
 

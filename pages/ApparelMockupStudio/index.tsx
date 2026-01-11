@@ -169,7 +169,7 @@ export const ApparelMockupStudio: React.FC = () => {
         <div className="flex flex-col items-center content-center w-full">
           <div className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="w-full md:col-span-1">
-              <div className="bg-white/[0.04] backdrop-blur-xl border border-white/50 rounded-3xl p-8 mb-8 h-full">
+              <div className="bg-white/[0.04] backdrop-blur-xl border border-white/50 rounded-3xl p-8 mb-8 h-fit">
                 <h2 className="text-xl font-bold mb-6 text-center">{t('productMockupGenerator.inputs')}</h2>
                 <ImageUpload
                   value={currentImage}
@@ -189,7 +189,7 @@ export const ApparelMockupStudio: React.FC = () => {
                     disabled={isGeneratingDesign}
                   />
                   <button 
-                    onClick={handleGenerateDesign}
+                    onClick={() => handleGenerateDesign()}
                     disabled={!AIDesignerPrompt.trim() || isGeneratingDesign}
                     className="w-full mt-2 px-6 py-3 rounded-xl bg-white text-black font-semibold hover:bg-white/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
@@ -276,14 +276,22 @@ export const ApparelMockupStudio: React.FC = () => {
           </div>
         </div>
       ) : (
-        <div className="flex flex-col gap-6 items-center w-full max-w-6xl">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
-            {generatedResults.map((result, idx) => <ImageResultHolder key={idx} imageUrl={result.url} name={result.name} />)}
+        <div className="flex flex-col gap-6 items-center w-full max-w-6xl h-fit">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full mb-8">
+            {generatedResults.map((result, idx) => 
+              <ImageResultHolder
+                  key={idx}
+                  imageUrl={result.url}
+                  name={result.name}
+                  showRegenerate={false}
+                  color={isValidHex(result.name) ? result.name : undefined}
+                />
+            )}
             {isGeneratingMockups && (
-               <div className="flex flex-col items-center justify-center p-12 bg-white/5 border border-white/10 rounded-2xl animate-pulse min-h-[400px]">
-                  <Loader2 className="w-10 h-10 text-indigo-400 animate-spin mb-4" />
-                  <span className="text-white/60 font-semibold">{t('productMockupGenerator.generatingMockups')}</span>
-               </div>
+              <div className="flex flex-col items-center justify-center p-12 bg-white/5 border border-white/10 rounded-2xl animate-pulse min-h-[400px]">
+                <Loader2 className="w-10 h-10 text-indigo-400 animate-spin mb-4" />
+                <span className="text-white/60 font-semibold">{t('productMockupGenerator.generatingMockups')}</span>
+              </div>
             )}
           </div>
           <div className="flex items-center gap-4 mt-8">

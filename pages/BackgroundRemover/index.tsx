@@ -244,7 +244,7 @@ export const BackgroundRemover: React.FC = () => {
                             </div>
                             <div>
                                 <p className="text-white font-semibold text-lg">{t('backgroundRemover.processing')}</p>
-                                <p className="text-white/40 text-sm">Analysing segmentation mask...</p>
+                                <p className="text-white/40 text-sm">{t('backgroundRemover.analyzing')}</p>
                             </div>
                         </div>
                     ) : (

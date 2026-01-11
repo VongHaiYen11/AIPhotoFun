@@ -49,6 +49,7 @@ export const PolaroidCard: React.FC<PolaroidCardProps> = ({
       className="
         relative
         w-full
+        h-auto
         bg-white
         rounded-2xl
         shadow-xl

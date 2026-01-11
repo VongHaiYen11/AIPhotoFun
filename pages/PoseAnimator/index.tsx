@@ -209,7 +209,7 @@ Your secondary task is to transfer the pose from the second image (the 'referenc
 
     const renderCharacterStep = () => (
         <div className="w-full max-w-md flex flex-col items-center gap-6">
-            <div className="bg-white/[0.02] backdrop-blur-md border border-white/10 rounded-2xl p-6 shadow-lg w-full">
+            <div className="bg-white/[0.02] backdrop-blur-md border border-white/10 rounded-2xl p-6 shadow-lg w-fit">
                 <h3 className="font-bold text-2xl text-white mb-2 text-center">{t('poseAnimator.step1Title')}</h3>
                 <p className="text-white/60 mb-4 text-center">{t('poseAnimator.step1Desc')}</p>
                 
@@ -241,12 +241,12 @@ Your secondary task is to transfer the pose from the second image (the 'referenc
 
     const renderPoseStep = () => (
         <div className="w-full max-w-4xl flex flex-col items-center gap-6">
-            <div className="bg-white/[0.02] backdrop-blur-md border border-white/10 rounded-2xl p-6 shadow-lg w-full">
+            <div className="bg-white/[0.02] backdrop-blur-md border border-white/10 rounded-2xl p-6 shadow-lg w-full flex flex-col items-center">
                 <h3 className="font-bold text-2xl text-white mb-2 text-center">{t('poseAnimator.step2Title')}</h3>
                 <p className="text-white/60 mb-4 text-center">{t('poseAnimator.step2Desc')}</p>
                 
                 {/* Tab Switcher */}
-                <div className="flex items-center justify-center gap-2 bg-white/5 p-1 rounded-lg mb-6">
+                <div className="flex items-center justify-center gap-2 bg-white/5 p-1 rounded-lg mb-6 w-fit">
                     <button 
                         onClick={() => setPoseSourceTab('upload')} 
                         className={cn(
