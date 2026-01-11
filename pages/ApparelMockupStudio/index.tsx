@@ -19,7 +19,7 @@ import { Loader2 } from 'lucide-react';
 export const ApparelMockupStudio: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { addImageToLibrary, selectedImageForTool, clearSelectedImageForTool } = useMediaLibrary();
+  const { addImageToLibrary, logGenerationActivity, selectedImageForTool, clearSelectedImageForTool } = useMediaLibrary();
 
   const {
     status, setStatus,
@@ -76,7 +76,8 @@ export const ApparelMockupStudio: React.FC = () => {
     try {
       const url = await generateGraphicFromPrompt(AIDesignerPrompt);
       setCurrentImage(url);
-      addImageToLibrary(url);
+      await addImageToLibrary(url);
+      await logGenerationActivity('Apparel Design', { prompt: AIDesignerPrompt });
     } catch (error) {
       console.error("Design generation failed:", error);
       alert("Failed to generate design. Please try again.");
@@ -107,7 +108,8 @@ export const ApparelMockupStudio: React.FC = () => {
       if (mode === 'Upload' && uploadedMockup) {
         const url = await generateProductMockup(currentImage, uploadedMockup);
         setGeneratedResults([{ url, name: 'Custom Mockup' }]);
-        addImageToLibrary(url);
+        await addImageToLibrary(url);
+        await logGenerationActivity('Apparel Mockup', { type: 'Custom Mockup' });
       } else {
         const colorsToGenerate = colorways.length > 0 ? colorways : ['#FFFFFF'];
 
@@ -116,7 +118,13 @@ export const ApparelMockupStudio: React.FC = () => {
           try {
              const url = await generateApparelMockup(currentImage, prompt);
              setGeneratedResults(prev => [...prev, { url, name: color }]);
-             addImageToLibrary(url);
+             await addImageToLibrary(url);
+             await logGenerationActivity('Apparel Mockup', { 
+                 type: 'AI Generated',
+                 style: selectedMockup, 
+                 color: color,
+                 apparelDescription: styleDescPrompt 
+             });
           } catch (e) {
              console.error(`Failed to generate for color ${color}`, e);
           }

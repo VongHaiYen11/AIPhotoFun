@@ -1,3 +1,4 @@
+
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
@@ -168,7 +169,7 @@ const OptionsGroup: React.FC<OptionsGroupProps> = ({ label, children }) => (
 
 export const PortraitGenerator: React.FC = () => {
     const { t } = useTranslation();
-    const { addImageToLibrary, selectedImageForTool, clearSelectedImageForTool } = useMediaLibrary();
+    const { addImageToLibrary, logGenerationActivity, selectedImageForTool, clearSelectedImageForTool } = useMediaLibrary();
     const [view, setView] = useState<View>('config');
     const [uploadedImage, setUploadedImage] = useState<string | null>(null);
     const [generatedImage, setGeneratedImage] = useState<string | null>(null);
@@ -296,7 +297,10 @@ export const PortraitGenerator: React.FC = () => {
             const croppedImageDataUrl = await cropImageToAspectRatio(uploadedImage, targetAspectRatio);
             const resultUrl = await generateStyledImage(prompt, [croppedImageDataUrl]);
             setGeneratedImage(resultUrl);
-            addImageToLibrary(resultUrl);
+            await addImageToLibrary(resultUrl);
+            await logGenerationActivity('Portrait Generator', {
+                gender, attire, hair, expression, background, printSize
+            });
         } catch (err) {
             setError(err instanceof Error ? err.message : "An unknown error occurred.");
             console.error(err);

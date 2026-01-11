@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -11,7 +12,7 @@ import { Loader2, Download, RefreshCcw } from 'lucide-react';
 
 export const OutfitExtractor: React.FC = () => {
   const { t } = useTranslation();
-  const { addImageToLibrary, selectedImageForTool, clearSelectedImageForTool } = useMediaLibrary();
+  const { addImageToLibrary, logGenerationActivity, selectedImageForTool, clearSelectedImageForTool } = useMediaLibrary();
 
   // State
   const [originalImage, setOriginalImage] = useState<string | undefined>();
@@ -45,7 +46,8 @@ export const OutfitExtractor: React.FC = () => {
       // Call the Gemini Service
       const url = await extractOutfitFromImage(originalImage, refineText);
       setExtractedImage(url);
-      addImageToLibrary(url);
+      await addImageToLibrary(url);
+      await logGenerationActivity('Outfit Extractor', { refinement: refineText });
     } catch (error) {
       console.error("Outfit extraction failed:", error);
       alert(t('outfitExtractor.extractionFailed'));

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -20,7 +21,7 @@ import { useMediaLibrary } from '../../contexts/MediaLibraryContext';
 export const Photoshoot: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { addImageToLibrary, selectedImageForTool, clearSelectedImageForTool } = useMediaLibrary();
+  const { addImageToLibrary, logGenerationActivity, selectedImageForTool, clearSelectedImageForTool } = useMediaLibrary();
   const {
     status, setStatus,
     currentImage, setCurrentImage,
@@ -178,6 +179,12 @@ export const Photoshoot: React.FC = () => {
       setCurrentImage(url);
       setModelLibrary(prev => [...prev, url]);
       setMode('Upload'); // Switch back to see the image in the main uploader
+      
+      // Log model generation
+      await logGenerationActivity('AI Model Gen', {
+          prompt: AIDesignerPrompt
+      });
+
     } catch (error) {
       console.error("Failed to generate model:", error);
       alert("Failed to generate model. Please try again.");
@@ -234,7 +241,19 @@ export const Photoshoot: React.FC = () => {
           url,
           pose: poseName
         }]);
-        addImageToLibrary(url);
+        await addImageToLibrary(url);
+        
+        // Log history activity for this generation
+        await logGenerationActivity('AI Photoshoot', {
+            pose: poseName,
+            cameraAngle: selectedCameraAngle,
+            colorGrade: selectedColorGrade,
+            aspectRatio: selectedSize,
+            hasOutfit: !!outfitImage,
+            hasObject: !!objectImage,
+            hasBackground: !!backgroundImage
+        });
+
       } catch (error) {
         console.error(`Failed to generate pose ${poseName}:`, error);
       }

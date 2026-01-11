@@ -1,3 +1,4 @@
+
 import React, { useState, DragEvent, ChangeEvent, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -178,7 +179,7 @@ const ADULT_POSES = [
 
 export const ConceptStudio: React.FC = () => {
     const { t } = useTranslation();
-    const { addImageToLibrary, selectedImageForTool, clearSelectedImageForTool } = useMediaLibrary();
+    const { addImageToLibrary, logGenerationActivity, selectedImageForTool, clearSelectedImageForTool } = useMediaLibrary();
     const [step, setStep] = useState<Step>('UPLOAD');
     
     // Uploaded images
@@ -321,7 +322,8 @@ After satisfying the identity preservation rule, perform the following compositi
                 ...prev,
                 [poseId]: { ...prev[poseId], status: 'done', url: resultUrl }
             }));
-            addImageToLibrary(resultUrl);
+            await addImageToLibrary(resultUrl);
+            await logGenerationActivity('Concept Studio', { poseId: poseId });
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : "Final image generation failed.";
             setGeneratedImages(prev => ({

@@ -21,6 +21,7 @@ interface MediaLibraryContextType {
     selectedImageForTool: string | null;
     clearSelectedImageForTool: () => void;
     refreshLibrary: () => Promise<void>;
+    logGenerationActivity: (featureType: string, parameters: Record<string, any>) => Promise<void>;
 }
 
 const MediaLibraryContext = createContext<MediaLibraryContextType | undefined>(undefined);
@@ -163,6 +164,28 @@ export const MediaLibraryProvider: React.FC<{ children: ReactNode }> = ({ childr
         }
     };
 
+    const logGenerationActivity = async (featureType: string, parameters: Record<string, any>) => {
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session?.user) return;
+
+            const { error } = await supabase
+                .from('generations')
+                .insert([{
+                    user_id: session.user.id,
+                    feature_type: featureType,
+                    parameters: parameters,
+                    status: 'completed'
+                }]);
+
+            if (error) {
+                console.error('Error logging generation activity:', error);
+            }
+        } catch (err) {
+            console.error('Error in logGenerationActivity:', err);
+        }
+    };
+
     const removeImagesFromLibrary = async (ids: string[]) => {
         try {
             // Find assets to delete to get their storage paths
@@ -256,7 +279,8 @@ export const MediaLibraryProvider: React.FC<{ children: ReactNode }> = ({ childr
             selectImageForTool,
             selectedImageForTool,
             clearSelectedImageForTool,
-            refreshLibrary: fetchAssets
+            refreshLibrary: fetchAssets,
+            logGenerationActivity
         }}>
             {children}
         </MediaLibraryContext.Provider>

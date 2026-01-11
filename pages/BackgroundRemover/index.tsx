@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -11,7 +12,7 @@ import { Loader2, Download, MousePointerClick, Check, Eraser } from 'lucide-reac
 
 export const BackgroundRemover: React.FC = () => {
   const { t } = useTranslation();
-  const { addImageToLibrary, selectedImageForTool, clearSelectedImageForTool } = useMediaLibrary();
+  const { addImageToLibrary, logGenerationActivity, selectedImageForTool, clearSelectedImageForTool } = useMediaLibrary();
 
   // State
   const [originalImage, setOriginalImage] = useState<string | undefined>();
@@ -67,7 +68,8 @@ export const BackgroundRemover: React.FC = () => {
     try {
       const url = await removeBackgroundFromImageAtPoint(originalImage, actualX, actualY);
       setResultImage(url);
-      addImageToLibrary(url);
+      await addImageToLibrary(url);
+      await logGenerationActivity('Background Remover', { clickCoordinates: {x: actualX, y: actualY} });
     } catch (error) {
       console.error("Background removal failed:", error);
       alert(t('backgroundRemover.removalFailed'));

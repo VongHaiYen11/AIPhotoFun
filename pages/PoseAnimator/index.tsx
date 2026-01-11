@@ -1,3 +1,4 @@
+
 import React, { useState, DragEvent, ChangeEvent, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -75,7 +76,7 @@ const ImageViewer = ({ title, imageUrl, children }: { title: string, imageUrl: s
 // Main component
 export function PoseAnimator() {
     const { t } = useTranslation();
-    const { addImageToLibrary, selectedImageForTool, clearSelectedImageForTool } = useMediaLibrary();
+    const { addImageToLibrary, logGenerationActivity, selectedImageForTool, clearSelectedImageForTool } = useMediaLibrary();
     const [view, setView] = useState<'character' | 'pose' | 'result'>('character');
     const [characterImage, setCharacterImage] = useState<string | null>(null);
     const [poseImage, setPoseImage] = useState<string | null>(null);
@@ -140,7 +141,11 @@ Your secondary task is to transfer the pose from the second image (the 'referenc
             
             const resultUrl = await generateStyledImage(prompt, [charImg, poseImg], instructions);
             setGeneratedImage(resultUrl);
-            addImageToLibrary(resultUrl);
+            await addImageToLibrary(resultUrl);
+            await logGenerationActivity('Pose Animator', {
+                instructions: instructions || '',
+                poseSource: poseSourceTab
+            });
         } catch (err) {
             setError(err instanceof Error ? err.message : "An unknown error occurred.");
             console.error(err);

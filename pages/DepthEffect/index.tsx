@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -12,7 +13,7 @@ import { Loader2, Download, Layers } from 'lucide-react';
 
 export const DepthEffect: React.FC = () => {
   const { t } = useTranslation();
-  const { addImageToLibrary, selectedImageForTool, clearSelectedImageForTool } = useMediaLibrary();
+  const { addImageToLibrary, logGenerationActivity, selectedImageForTool, clearSelectedImageForTool } = useMediaLibrary();
 
   // State
   const [originalImage, setOriginalImage] = useState<string | undefined>();
@@ -43,7 +44,8 @@ export const DepthEffect: React.FC = () => {
     try {
       const url = await generateDepthMap(originalImage);
       setDepthMap(url);
-      addImageToLibrary(url);
+      await addImageToLibrary(url);
+      await logGenerationActivity('Depth Effect', {});
     } catch (error) {
       console.error("Depth map generation failed:", error);
       alert(t('depthEffect.generationFailed'));

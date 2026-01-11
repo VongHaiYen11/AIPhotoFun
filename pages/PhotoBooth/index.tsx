@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -12,7 +13,7 @@ import { Loader2, Download } from 'lucide-react';
 
 export const PhotoBooth: React.FC = () => {
   const { t } = useTranslation();
-  const { addImageToLibrary, selectedImageForTool, clearSelectedImageForTool } = useMediaLibrary();
+  const { addImageToLibrary, logGenerationActivity, selectedImageForTool, clearSelectedImageForTool } = useMediaLibrary();
 
   const [status, setStatus] = useState<boolean>(true); // true = input, false = result
   const [currentImage, setCurrentImage] = useState<string | undefined>();
@@ -53,7 +54,8 @@ export const PhotoBooth: React.FC = () => {
 
       const url = await generatePhotoBoothImage(currentImage, count);
       setGeneratedImage(url);
-      addImageToLibrary(url);
+      await addImageToLibrary(url);
+      await logGenerationActivity('Photo Booth', { photoCount: count });
     } catch (error) {
       console.error("Photo Booth generation failed:", error);
       alert(t('photoBooth.generationFailed'));

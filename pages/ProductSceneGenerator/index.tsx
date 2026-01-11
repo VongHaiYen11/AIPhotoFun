@@ -17,7 +17,7 @@ import { Loader2 } from 'lucide-react';
 export const ProductSceneGenerator: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { addImageToLibrary, selectedImageForTool, clearSelectedImageForTool } = useMediaLibrary();
+  const { addImageToLibrary, logGenerationActivity, selectedImageForTool, clearSelectedImageForTool } = useMediaLibrary();
 
   const [status, setStatus] = useState<boolean>(true);
   const [currentImage, setCurrentImage] = useState<string | undefined>();
@@ -67,7 +67,11 @@ export const ProductSceneGenerator: React.FC = () => {
             try {
                 const url = await generateStyledImage(prompt, [currentImage]);
                 setGeneratedResults(prev => [...prev, { url, name: readableName }]);
-                addImageToLibrary(url);
+                await addImageToLibrary(url);
+                await logGenerationActivity('Product Scene', {
+                    angle: rawAngle,
+                    cameraAngleKey: angleKey
+                });
             } catch (error) {
                 console.error(`Failed to generate angle ${rawAngle}:`, error);
             }

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -11,7 +12,7 @@ import { Loader2, Download, RefreshCcw } from 'lucide-react';
 
 export const CloneEffect: React.FC = () => {
   const { t } = useTranslation();
-  const { addImageToLibrary, selectedImageForTool, clearSelectedImageForTool } = useMediaLibrary();
+  const { addImageToLibrary, logGenerationActivity, selectedImageForTool, clearSelectedImageForTool } = useMediaLibrary();
 
   // State
   const [originalImage, setOriginalImage] = useState<string | undefined>();
@@ -44,7 +45,8 @@ export const CloneEffect: React.FC = () => {
     try {
       const url = await generateCloneEffectImage(originalImage, refineText);
       setGeneratedImage(url);
-      addImageToLibrary(url);
+      await addImageToLibrary(url);
+      await logGenerationActivity('Clone Effect', { refinement: refineText });
     } catch (error) {
       console.error("Clone generation failed:", error);
       alert(t('cloneEffect.generationFailed'));

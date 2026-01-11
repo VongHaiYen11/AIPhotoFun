@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -10,7 +11,7 @@ import { Loader2 } from 'lucide-react';
 
 export const TypographicIllustrator: React.FC = () => {
   const { t } = useTranslation();
-  const { addImageToLibrary } = useMediaLibrary();
+  const { addImageToLibrary, logGenerationActivity } = useMediaLibrary();
 
   // true = input, false = result
   const [status, setStatus] = useState<boolean>(true);
@@ -40,7 +41,8 @@ export const TypographicIllustrator: React.FC = () => {
     try {
       const url = await generateTypographicIllustration(scenePrompt);
       setResultImage(url);
-      addImageToLibrary(url);
+      await addImageToLibrary(url);
+      await logGenerationActivity('Typographic Illustration', { phrase: scenePrompt });
     } catch (error) {
       console.error("Generation failed:", error);
       alert(t('typographicIllustrator.generationFailed'));

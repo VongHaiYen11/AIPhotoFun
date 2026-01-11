@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -11,7 +12,7 @@ import { Loader2, Download, Eraser, Brush, Trash2, PenTool } from 'lucide-react'
   
 export const Inpainter: React.FC = () => {
   const { t } = useTranslation();
-  const { addImageToLibrary, selectedImageForTool, clearSelectedImageForTool } = useMediaLibrary();
+  const { addImageToLibrary, logGenerationActivity, selectedImageForTool, clearSelectedImageForTool } = useMediaLibrary();
 
   // State
   const [originalImage, setOriginalImage] = useState<string | undefined>();
@@ -175,7 +176,8 @@ export const Inpainter: React.FC = () => {
     try {
       const url = await fillMaskedImage(promptText, maskDataUrl);
       setResultImage(url);
-      addImageToLibrary(url);
+      await addImageToLibrary(url);
+      await logGenerationActivity('Inpainter', { prompt: promptText });
     } catch (error) {
       console.error("Inpainting failed:", error);
       alert(t('inpainter.inpaintingFailed'));
