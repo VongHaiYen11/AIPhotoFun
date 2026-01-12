@@ -502,12 +502,9 @@ After satisfying the identity preservation rule, perform the following compositi
                 transition={{ duration: 0.8 }}
                 className="text-center mb-12"
             >
-                <div className="flex items-center justify-center gap-3 mb-4">
-                    <Palette className="w-8 h-8 text-white" />
-                    <h1 className="text-4xl md:text-5xl font-black tracking-tighter">
-                        {t('app.conceptStudioTitle')}
-                    </h1>
-                </div>
+                <h1 className="text-5xl md:text-7xl font-black tracking-tighter mb-6">
+                {t('app.conceptStudioTitle')}
+                </h1>
                 <p className="text-white/60 text-lg md:text-xl max-w-3xl mx-auto">
                     {t('conceptStudio.subtitle')}
                 </p>

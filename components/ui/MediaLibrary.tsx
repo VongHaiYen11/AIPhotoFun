@@ -33,14 +33,43 @@ export const MediaLibrary: React.FC = () => {
         }
     };
 
-    const handleDownload = (e: React.MouseEvent, imageUrl: string) => {
+    const handleDownload = async (e: React.MouseEvent, imageUrl: string) => {
         e.stopPropagation();
-        const link = document.createElement('a');
-        link.href = imageUrl;
-        link.download = `media-library-${Date.now()}.png`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        try {
+            // Fetch the image as a blob to bypass cross-origin download restrictions
+            const response = await fetch(imageUrl);
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            
+            // Try to determine extension from url, default to png
+            let ext = 'png';
+            try {
+                const urlPath = new URL(imageUrl).pathname;
+                const extension = urlPath.split('.').pop();
+                if (extension && extension.length < 5) ext = extension;
+            } catch (e) {}
+
+            link.download = `media-library-${Date.now()}.${ext}`;
+            document.body.appendChild(link);
+            link.click();
+            
+            // Cleanup
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error('Download failed:', error);
+            // Fallback: try direct link (might open in new tab if cross-origin download fails)
+            const link = document.createElement('a');
+            link.href = imageUrl;
+            link.target = '_blank';
+            link.download = `media-library-${Date.now()}`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
     };
 
     const executeConfirmation = () => {
@@ -215,3 +244,4 @@ export const MediaLibrary: React.FC = () => {
 };
 
 export default MediaLibrary;
+    

@@ -265,12 +265,9 @@ export const ObjectRemover: React.FC = () => {
         transition={{ duration: 0.8 }}
         className="text-center mb-12"  
       >
-        <div className="flex items-center justify-center gap-3 mb-4">
-            <Brush className="w-8 h-8 text-white" />
-            <h1 className="text-4xl md:text-5xl font-black tracking-tighter">
-            {t('app.objectRemoverTitle')}
-            </h1>
-        </div>
+        <h1 className="text-5xl md:text-7xl font-black tracking-tighter mb-6">
+          {t('app.objectRemoverTitle')}
+        </h1>
         <p className="text-white/60 text-lg md:text-xl max-w-3xl mx-auto">
           {t('objectRemover.subtitle')}
         </p>
