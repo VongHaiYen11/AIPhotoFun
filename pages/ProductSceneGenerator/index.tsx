@@ -133,7 +133,7 @@ export const ProductSceneGenerator: React.FC = () => {
         ) : (
           <div className="flex flex-col gap-6 items-center w-full max-w-6xl">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full mb-16">
-              {generatedResults.map((res, idx) => <ImageResultHolder key={idx} imageUrl={res.url} name={res.name} />)}
+              {generatedResults.map((res, idx) => <ImageResultHolder key={idx} imageUrl={res.url} name={res.name} showRegenerate={false} />)}
               {isGenerating && (
                    <div className="flex flex-col items-center justify-center p-12 bg-white/5 border border-white/10 rounded-2xl animate-pulse min-h-[400px]">
                       <Loader2 className="w-10 h-10 text-indigo-400 animate-spin mb-4" />
